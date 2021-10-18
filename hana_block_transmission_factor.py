@@ -1,12 +1,11 @@
 import math
+import numpy as np
 
 
-def transmission_factor_square(cos_theta: float, width: float, height: float,
-                               distance_vertical: float, distance_horizontal: float) -> float:
+def transmission_factor_square(width: float, height: float, distance_vertical: float, distance_horizontal: float) -> float:
     """
     四角形の花ブロックの透過率を計算する
 
-    :param cos_theta: 太陽光線の入射角の余弦[-]
     :param width: 幅[mm]
     :param height: 高さ[mm]
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
@@ -14,23 +13,23 @@ def transmission_factor_square(cos_theta: float, width: float, height: float,
     :return: 四角形の花ブロックの透過率[-]
     """
 
-    # 誤差値を規定
-    error_value = 0.0001
-
-    # cos_thetaが誤差値未満（太陽が対象面の裏側にある）場合は0とする
-    if cos_theta < error_value:
+    if math.isnan(distance_horizontal) and math.isnan(distance_vertical):
+        # 点の影の垂直方向の移動距離、水平方向の移動距離がnan値の場合は太陽光線は入射しないので透過率は0とする
         rate = 0.0
     else:
-        # 点の影の垂直方向、水平方向の移動距離を設定
-        d_x = min(abs(distance_horizontal), width)
-        d_y = min(abs(distance_vertical), height)
+        # 点の影の移動距離を絶対値に変換
+        d_x = abs(distance_horizontal)
+        d_y = abs(distance_vertical)
 
-        # 開口部分の面積、重なり部分の面積を計算
-        area_opening = width * height
-        area_transmit = (width - d_x) * (height - d_y)
+        if d_x >= width or d_y >= height:
+            rate = 0.0
+        else:
+            # 開口部分の面積、重なり部分の面積を計算
+            area_opening = width * height
+            area_transmit = (width - d_x) * (height - d_y)
 
-        # 透過率を計算
-        rate = area_transmit / area_opening
+            # 透過率を計算
+            rate = area_transmit / area_opening
 
     return rate
 
