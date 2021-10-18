@@ -76,201 +76,102 @@ def transmission_factor_circle(radius: float, distance_vertical: float, distance
     return rate
 
 
-def distance_of_points_shadow(depth: float, tan_phi: float, tan_gamma: float) -> [float, float]:
+def transmission_factor_triangle(coordinates_front: dict,
+                                 distance_vertical: float, distance_horizontal: float) -> float:
     """
-    点の影の垂直方向、水平方向の移動距離を計算する
+    三角形の花ブロックの透過率を計算する
 
-    :param depth: 奥行[mm]
-    :param tan_phi: 見かけの太陽高度（プロファイル角）の正接[-]
-    :param tan_gamma: 面の太陽方位角の正接[-]
-    # :param sun_altitude: 太陽高度[degrees]
-    # :param sun_azimuth_angle: 太陽方位角[degrees]
-    # :param surface_inclination_angle:  面の傾斜角[degrees]
-    # :param surface_azimuth_angle:  面の方位角[degrees]
-    :return: 点の影の垂直方向、水平方向の移動距離[mm]
+    :param coordinates_front: 手前側の三角形ABCの各頂点の座標(x, y)
+    :param distance_vertical: 点の影の垂直方向の移動距離[mm]
+    :param distance_horizontal: 点の影の水平方向の移動距離[mm]
+    :return:三角形の花ブロックの透過率[-]
     """
 
-    # # 太陽光線の方向余弦を計算
-    # s_h, s_w, s_s = direction_cosine_of_sunlight(sun_altitude=sun_altitude, sun_azimuth_angle=sun_azimuth_angle)
-    #
-    # # 傾斜面法線の方向余弦を計算
-    # w_z, w_w, w_s = direction_cosine_of_slope_normal_line(
-    #     surface_inclination_angle=surface_inclination_angle, surface_azimuth_angle=surface_azimuth_angle)
-    #
-    # # 太陽光線の入射角の余弦を計算
-    # cos_theta = cosine_sun_incidence_angle(s_h=s_h, s_w=s_w, s_s=s_s, w_z=w_z, w_w=w_w, w_s=w_s)
+    # 奥側の三角形A'B'C'の各頂点の座標を設定
+    coordinates_back = {
+        'peak_a_dash': (coordinates_front['peak_a'][0] + distance_vertical,
+                        coordinates_front['peak_a'][1] + distance_horizontal),
+        'peak_b_dash': (coordinates_front['peak_b'][0] + distance_vertical,
+                        coordinates_front['peak_b'][1] + distance_horizontal),
+        'peak_c_dash': (coordinates_front['peak_c'][0] + distance_vertical,
+                        coordinates_front['peak_c'][1] + distance_horizontal)
+    }
 
-    # # 誤差値を規定
-    # error_value = 0.0001
-    #
-    # # cos_thetaが誤差値未満の場合は計算しない（太陽が対象面の裏側にある）
-    # if cos_theta < error_value:
-    #     tan_phi = 0.0
-    #     tan_gamma = 0.0
-    #
-    # else:
-    #     # 見かけの太陽高度（プロファイル角）の正接を計算
-    #     tan_phi = tangent_profile_angle(s_h=s_h, s_w=s_w, s_s=s_s, cos_theta=cos_theta,
-    #                                     surface_inclination_angle=surface_inclination_angle,
-    #                                     surface_azimuth_angle=surface_azimuth_angle)
-    #
-    #     # 面の太陽方位角の正接を計算
-    #     tan_gamma = tangent_sun_azimuth_angle_of_surface(s_w=s_w, s_s=s_s, cos_theta=cos_theta,
-    #                                                      surface_azimuth_angle=surface_azimuth_angle)
+    results = get_witch_peak_inside(coordinates_front, coordinates_back)
 
-    # 点の影の垂直方向、水平方向の移動距離を計算
-    distance_vertical = depth * tan_phi
-    distance_horizontal = depth * tan_gamma
-
-    return distance_vertical, distance_horizontal
-
-
-def tangent_profile_angle(s_h: float, s_w: float, s_s: float, cos_theta: float,
-                          surface_inclination_angle: float, surface_azimuth_angle: float) -> float:
-    """
-    見かけの太陽高度（プロファイル角）の正接を計算する
-
-    :param s_h: 太陽光線の方向余弦[-]
-    :param s_w: 太陽光線の方向余弦[-]
-    :param s_s: 太陽光線の方向余弦[-]
-    :param cos_theta: 太陽光線の入射角の余弦[-]
-    :param surface_inclination_angle:  面の傾斜角[degrees]
-    :param surface_azimuth_angle:  面の方位角[degrees]
-    :return: 太陽光線の入射角[degrees]
-    """
-
-    # 誤差値を規定
-    error_value = 0.0001
-
-    # cos_thetaが誤差値未満の場合は計算しない（太陽が対象面の裏側にある）
-    if cos_theta < error_value:
-        tan_phi = 0
-    else:
-        tan_phi = (s_h * math.sin(math.radians(surface_inclination_angle))
-                   - s_w * (math.cos(math.radians(surface_inclination_angle)) * math.sin(math.radians(surface_azimuth_angle)))
-                   - s_s * (math.cos(math.radians(surface_inclination_angle)) * math.cos(math.radians(surface_azimuth_angle)))
-                   ) / cos_theta
-
-    return tan_phi
-
-
-def tangent_sun_azimuth_angle_of_surface(s_w: float, s_s: float, cos_theta: float,
-                                         surface_azimuth_angle: float) -> float:
-    """
-    面の太陽方位角の正接を計算する
-
-    :param s_w: 太陽光線の方向余弦[-]
-    :param s_s: 太陽光線の方向余弦[-]
-    :param cos_theta: 太陽光線の入射角の余弦[-]
-    :param surface_azimuth_angle:  面の方位角[degrees]
-    :return: 面の太陽方位角の正接[-]
-    """
-
-    # 誤差値を規定
-    error_value = 0.0001
-
-    # cos_thetaが誤差値未満の場合は計算しない（太陽が対象面の裏側にある）
-    if cos_theta < error_value:
-        tan_gamma = 0
-    else:
-        tan_gamma = (s_w * math.cos(math.radians(surface_azimuth_angle))
-                     - s_s * math.sin(math.radians(surface_azimuth_angle))
-                     ) / cos_theta
-
-    return tan_gamma
-
-
-def cosine_sun_incidence_angle(s_h: float, s_w: float, s_s: float, w_z: float, w_w: float, w_s: float) -> float:
-    """
-    太陽光線の入射角の余弦を計算する
-
-    :param s_h: 太陽光線の方向余弦[-]
-    :param s_w: 太陽光線の方向余弦[-]
-    :param s_s: 太陽光線の方向余弦[-]
-    :param w_z: 傾斜面法線の方向余弦[-]
-    :param w_w: 傾斜面法線の方向余弦[-]
-    :param w_s: 傾斜面法線の方向余弦[-]
-    :return: 太陽光線の入射角の余弦[-]
-    """
-
-    cos_theta = s_h * w_z + s_w * w_w + s_s * w_s
-
-    return cos_theta
-
-
-def direction_cosine_of_sunlight(sun_altitude: float, sun_azimuth_angle: float) -> [float, float, float]:
-    """
-    太陽光線の方向余弦を計算する
-
-    :param sun_altitude: 太陽高度[degrees]
-    :param sun_azimuth_angle: 太陽方位角[degrees]
-    :return: 太陽光線の方向余弦s_h, s_w, s_s[-]
-    """
-
-    # 太陽光線の方向余弦
-    s_h = math.sin(math.radians(sun_altitude))
-    s_w = math.cos(math.radians(sun_altitude)) * math.sin(math.radians(sun_azimuth_angle))
-    s_s = math.cos(math.radians(sun_altitude)) * math.cos(math.radians(sun_azimuth_angle))
-
-    return s_h, s_w, s_s
-
-
-def direction_cosine_of_slope_normal_line(surface_inclination_angle: float,
-                                          surface_azimuth_angle: float) -> [float, float, float]:
-    """
-    傾斜面法線の方向余弦を計算する
-
-    :param surface_inclination_angle:  面の傾斜角[degrees]
-    :param surface_azimuth_angle:  面の方位角[degrees]
-    :return: 傾斜面法線の方向余弦w_z, w_w, w_s[-]
-    """
-
-    # 傾斜面法線の方向余弦
-    w_z = math.cos(math.radians(surface_inclination_angle))
-    w_w = math.sin(math.radians(surface_inclination_angle)) * math.sin(math.radians(surface_azimuth_angle))
-    w_s = math.sin(math.radians(surface_inclination_angle)) * math.cos(math.radians(surface_azimuth_angle))
-
-    return w_z, w_w, w_s
-
-
-def case_study():
-    sun_altitude = 50
-    sun_azimuth_angle = 20
-    surface_inclination_angle = 90
-    surface_azimuth_angle = 0
-    width = 130
-    height = 130
-    depth = 100
-
-    # 太陽光線の方向余弦を計算
-    s_h, s_w, s_s = direction_cosine_of_sunlight(sun_altitude=sun_altitude, sun_azimuth_angle=sun_azimuth_angle)
-
-    # 傾斜面法線の方向余弦を計算
-    w_z, w_w, w_s = direction_cosine_of_slope_normal_line(
-        surface_inclination_angle=surface_inclination_angle, surface_azimuth_angle=surface_azimuth_angle)
-
-    # 太陽光線の入射角の余弦を計算
-    cos_theta = cosine_sun_incidence_angle(s_h=s_h, s_w=s_w, s_s=s_s, w_z=w_z, w_w=w_w, w_s=w_s)
-
-    # 見かけの太陽高度（プロファイル角）の正接を計算
-    tan_phi = tangent_profile_angle(s_h=s_h, s_w=s_w, s_s=s_s, cos_theta=cos_theta,
-                                    surface_inclination_angle=surface_inclination_angle,
-                                    surface_azimuth_angle=surface_azimuth_angle)
-
-    # 面の太陽方位角の正接を計算
-    tan_gamma = tangent_sun_azimuth_angle_of_surface(s_w=s_w, s_s=s_s, cos_theta=cos_theta,
-                                                     surface_azimuth_angle=surface_azimuth_angle)
-
-    distance_vertical, distance_horizontal = distance_of_points_shadow(depth, tan_phi, tan_gamma)
-
-    ratio = transmission_factor_circle(cos_theta, width, distance_vertical, distance_horizontal)
-    # ratio = transmission_factor_square(cos_theta, width, height, distance_vertical, distance_horizontal)
+    ratio = 0.0
 
     return ratio
 
 
+def get_witch_peak_inside(coordinates_front: dict, coordinates_back: dict) -> dict:
+
+    """
+    三角形の内側にある頂点を判定する
+
+    :param coordinates_front: 手前側の三角形ABCの各頂点の座標(x, y)
+    :param coordinates_back: 奥側の三角形ABCの各頂点の座標(x, y)
+    :return:三角形の花ブロックの透過率[-]
+    """
+
+    # 行列の初期化
+    matrix_coeff = np.zeros(shape=(2, 2))
+    matrix_const = np.zeros(2)
+
+    # 行列に値を設定（係数部分）
+    matrix_coeff[0][0] = coordinates_front['peak_b'][0] - coordinates_front['peak_a'][0]
+    matrix_coeff[0][1] = coordinates_front['peak_c'][0] - coordinates_front['peak_a'][0]
+    matrix_coeff[1][0] = coordinates_front['peak_b'][1] - coordinates_front['peak_a'][1]
+    matrix_coeff[1][1] = coordinates_front['peak_c'][1] - coordinates_front['peak_a'][1]
+
+    # 判定結果を格納するディクショナリを用意
+    results = {}
+
+    # 頂点Aの判定
+    matrix_const[0] = coordinates_front['peak_a'][0] - coordinates_back['peak_a_dash'][0]
+    matrix_const[1] = coordinates_front['peak_a'][1] - coordinates_back['peak_a_dash'][1]
+    results['peak_a'] = judge_is_peak_inside(matrix_coeff, matrix_const)
+
+    # 頂点Bの判定
+    matrix_const[0] = coordinates_front['peak_b'][0] - coordinates_back['peak_a_dash'][0]
+    matrix_const[1] = coordinates_front['peak_b'][1] - coordinates_back['peak_a_dash'][1]
+    results['peak_b'] = judge_is_peak_inside(matrix_coeff, matrix_const)
+
+    return results
+
+
+def judge_is_peak_inside(matrix_coeff: float, matrix_const: float) -> bool:
+
+    """
+    辺AB、辺ACに対する比率s, tを計算し、三角形の内側にある条件に合致するか判定する
+
+    :param matrix_coeff: 係数の行列
+    :param matrix_const: 定数の行列
+    :return:判定結果
+    """
+
+    # 辺AB、辺ACに対する比率s, tを計算
+    matrix_coeff_inv = np.linalg.inv(matrix_coeff)
+    matrix_solution = np.matmul(matrix_coeff_inv, matrix_const)
+
+    # 内側にあるかどうかの判定
+    # 条件01：S >= 0、条件02：T >= 0、条件03 ：S + T <= 1
+    if matrix_solution[0] >= 0.0 and matrix_solution[1] >= 0.0 and matrix_solution[0] + matrix_solution[1] <= 1.0:
+        judge = True
+    else:
+        judge = False
+
+    return judge
+
+
+def case_study_triangle():
+
+    front_triangle_peak_coordinates = {'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)}
+    print(transmission_factor_triangle(front_triangle_peak_coordinates, 10, 50))
+
+
 if __name__ == '__main__':
 
-    print(case_study())
+    print(case_study_triangle())
 
 
