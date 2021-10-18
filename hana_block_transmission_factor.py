@@ -34,41 +34,32 @@ def transmission_factor_square(width: float, height: float, distance_vertical: f
     return rate
 
 
-def transmission_factor_circle(cos_theta: float, radius: float,
-                               distance_vertical: float, distance_horizontal: float) -> float:
+def transmission_factor_circle(radius: float, distance_vertical: float, distance_horizontal: float) -> float:
     """
     円形の花ブロックの透過率を計算する
 
-    :param cos_theta: 太陽光線の入射角の余弦[-]
     :param radius: 円の半径[mm]
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
     :param distance_horizontal: 点の影の水平方向の移動距離[mm]
-    :return: 四角形の花ブロックの透過率[-]
+    :return: 円形の花ブロックの透過率[-]
     """
 
-    # 点の影の移動距離を絶対値に変換
-    d_x = abs(distance_horizontal)
-    d_y = abs(distance_vertical)
-
-    # 誤差値を規定
-    error_value = 0.0001
-
-    # cos_thetaが誤差値未満（太陽が対象面の裏側にある）場合は0とする
-    if cos_theta < error_value:
+    if math.isnan(distance_horizontal) and math.isnan(distance_vertical):
+        # 点の影の垂直方向の移動距離、水平方向の移動距離がnan値の場合は太陽光線は入射しないので透過率は0とする
         rate = 0.0
     else:
         # 円の中心点の移動距離[mm]を計算
-        distance = math.sqrt(d_x ** 2 + d_y ** 2)
+        distance = math.sqrt(distance_vertical ** 2 + distance_horizontal ** 2)
 
-        # 円の中心点の距離が半径より大きい場合は、重ならない
+        # 円の中心点の距離が半径より大きい場合は、円は重ならないので透過率=0.0とする
         if distance >= 2 * radius:
             area_transmit = 0.0
         else:
             # 扇形の内角[degree]を計算
-            angle = 2 * math.degrees(math.acos((distance ** 2)/(2 * radius * distance)))
+            angle = 2 * math.acos((distance ** 2) / (2 * radius * distance))
 
             # 扇形部分の面積を計算
-            area_sector = math.pi * radius ** 2 * angle/360
+            area_sector = math.pi * radius ** 2 * (angle / (2 * math.pi))
 
             # 三角形部分の面積を計算
             area_triangle = 0.5 * radius ** 2 * math.sin(math.radians(angle))
