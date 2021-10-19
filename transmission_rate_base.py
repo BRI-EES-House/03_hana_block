@@ -2,15 +2,15 @@ import math
 import numpy as np
 
 
-def transmission_factor_square(width: float, height: float, distance_vertical: float, distance_horizontal: float) -> float:
+def base_transmission_rate_square(width: float, height: float, distance_vertical: float, distance_horizontal: float) -> float:
     """
-    四角形の花ブロックの透過率を計算する
+    四角形の花ブロックの基準透過率を計算する
 
     :param width: 幅[mm]
     :param height: 高さ[mm]
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
     :param distance_horizontal: 点の影の水平方向の移動距離[mm]
-    :return: 四角形の花ブロックの透過率[-]
+    :return: 四角形の花ブロックの基準透過率[-]
     """
 
     if math.isnan(distance_horizontal) and math.isnan(distance_vertical):
@@ -34,14 +34,14 @@ def transmission_factor_square(width: float, height: float, distance_vertical: f
     return rate
 
 
-def transmission_factor_circle(radius: float, distance_vertical: float, distance_horizontal: float) -> float:
+def base_transmission_rate_circle(radius: float, distance_vertical: float, distance_horizontal: float) -> float:
     """
-    円形の花ブロックの透過率を計算する
+    円形の花ブロックの基準透過率を計算する
 
     :param radius: 円の半径[mm]
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
     :param distance_horizontal: 点の影の水平方向の移動距離[mm]
-    :return: 円形の花ブロックの透過率[-]
+    :return: 円形の花ブロックの基準透過率[-]
     """
 
     if math.isnan(distance_horizontal) and math.isnan(distance_vertical):
@@ -76,14 +76,14 @@ def transmission_factor_circle(radius: float, distance_vertical: float, distance
     return rate
 
 
-def transmission_factor_triangle(coordinates: dict, distance_vertical: float, distance_horizontal: float) -> float:
+def base_transmission_rate_triangle(coordinates: dict, distance_vertical: float, distance_horizontal: float) -> float:
     """
-    三角形の花ブロックの透過率を計算する
+    三角形の花ブロックの基準透過率を計算する
 
     :param coordinates: 手前側の三角形ABCの各頂点の座標(x, y)
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
     :param distance_horizontal: 点の影の水平方向の移動距離[mm]
-    :return:三角形の花ブロックの透過率[-]
+    :return:三角形の花ブロックの基準透過率[-]
     """
 
     if math.isnan(distance_horizontal) and math.isnan(distance_vertical):
@@ -295,7 +295,7 @@ def get_point_height_from_line(point_coordinate: tuple, p: float, q: float, r: f
 def case_study_triangle():
 
     triangle_coordinates = {'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)}
-    print(transmission_factor_triangle(triangle_coordinates, 10, -50))
+    print(base_transmission_rate_triangle(triangle_coordinates, 10, -50))
 
 
 if __name__ == '__main__':
