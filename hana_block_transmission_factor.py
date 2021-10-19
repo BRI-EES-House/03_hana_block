@@ -262,6 +262,21 @@ def get_target_base_point_and_side(inside_peak_name: str) -> dict:
     return target
 
 
+def get_linear_equation(coordinates_point1: tuple, coordinates_point2: tuple) -> [float, float, float]:
+    """
+        2点を通る一次方程式（px+qy+r=0）の各係数p,q,rを計算する
+
+        :param coordinates_point1: 1つ目の点の座標(x, y)
+        :param coordinates_point1: 2つ目の点の座標(x, y)
+        :return:一次方程式（px+qy+r=0）の各係数p,q,r
+    """
+    p = (coordinates_point2[1] - coordinates_point1[1]) / (coordinates_point2[0] - coordinates_point1[0])
+    q = -1.0
+    r = (coordinates_point2[0] * coordinates_point1[1] - coordinates_point1[0] * coordinates_point2[1])\
+        / (coordinates_point2[0] - coordinates_point1[0])
+
+    return p, q, r
+
 
     print(case_study_triangle())
 
