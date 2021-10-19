@@ -278,6 +278,19 @@ def get_linear_equation(coordinates_point1: tuple, coordinates_point2: tuple) ->
     return p, q, r
 
 
-    print(case_study_triangle())
+def get_point_height_from_line(point_coordinate: tuple, p: float, q: float, r: float) -> float:
+    """
+        直線からの点の高さを計算する
+
+        :param point_coordinate: 対象となる点の座標(x, y)
+        :param p: 一次方程式（px+qy+r=0）の係数
+        :param q: 一次方程式（px+qy+r=0）の係数
+        :param r: 一次方程式（px+qy+r=0）の係数
+        :return:一次方程式（px+qy+r=0）の各係数p,q,r
+    """
+    height = abs(p * point_coordinate[0] + q * point_coordinate[1] + r) / math.sqrt(p ** 2 + q ** 2)
+    return height
+
+
 
 
