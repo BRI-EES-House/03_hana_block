@@ -169,7 +169,7 @@ def get_witch_peak_inside(coordinates: dict) -> dict:
     return results
 
 
-def judge_is_peak_inside(matrix_coeff: float, matrix_const: float) -> bool:
+def judge_is_peak_inside(matrix_coeff: np.zeros(shape=(2, 2)), matrix_const: np.zeros(2)) -> bool:
 
     """
     辺AB、辺ACに対する比率s, tを計算し、三角形の内側にある条件に合致するか判定する
@@ -193,13 +193,75 @@ def judge_is_peak_inside(matrix_coeff: float, matrix_const: float) -> bool:
     return judge
 
 
-def case_study_triangle():
+def get_point_heights(peak_check_results: dict, coordinates: dict) -> [float, float]:
+    """
+    対辺からの基準点、内部点の高さを計算する
 
-    front_triangle_peak_coordinates = {'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)}
-    print(transmission_factor_triangle(front_triangle_peak_coordinates, 10, 50))
+    :param peak_check_results: 各頂点が内側にあるかどうかの判定結果
+    :param coordinates: 手前側の三角形ABC、奥側の三角形ABCの各頂点の座標(x, y)
+    :return:対辺からの基準点、内部点の高さ(mm)
+    """
+
+    # 内側にある頂点の座標を設定
+    inside_peak_name = [key for key, value in peak_check_results.items() if value is True][0]
+    inside_point = coordinates[inside_peak_name]
+
+    # 対象となる基準点、対辺の2点の座標を取得
+    target = get_target_base_point_and_side(inside_peak_name)
+    base_point = coordinates[target['base_point']]
+    side_point1 = coordinates[target['side_point1']]
+    side_point2 = coordinates[target['side_point2']]
+
+    # 対辺の2点を結ぶ一次方程式の係数を取得
+    p, q, r = get_linear_equation(side_point1, side_point2)
+
+    # 対辺からの基準点の高さを計算
+    h = get_point_height_from_line(point_coordinate=base_point, p=p, q=q, r=r)
+
+    # 対辺からの内部点の高さを計算
+    h_dash = get_point_height_from_line(point_coordinate=inside_point, p=p, q=q, r=r)
+
+    return h, h_dash
 
 
-if __name__ == '__main__':
+def get_target_base_point_and_side(inside_peak_name: str) -> dict:
+    """
+        内部点に応じて基準点となる頂点、および対辺を結ぶ2つの頂点の名称を設定する
+
+        :param inside_peak_name: 内側にある頂点の名称
+        :return:基準点となる頂点、および対辺を結ぶ2つの頂点の名称
+    """
+
+    target = {}
+
+    if inside_peak_name == 'peak_a':
+        target = {
+            'base_point': 'peak_a_dash', 'side_point1': 'peak_b_dash', 'side_point2': 'peak_c_dash'
+        }
+    elif inside_peak_name == 'peak_b':
+        target = {
+            'base_point': 'peak_b_dash', 'side_point1': 'peak_a_dash', 'side_point2': 'peak_c_dash'
+        }
+    elif inside_peak_name == 'peak_c':
+        target = {
+            'base_point': 'peak_c_dash', 'side_point1': 'peak_a_dash', 'side_point2': 'peak_b_dash'
+        }
+    elif inside_peak_name == 'peak_a_dash':
+        target = {
+            'base_point': 'peak_a', 'side_point1': 'peak_b', 'side_point2': 'peak_c'
+        }
+    elif inside_peak_name == 'peak_b_dash':
+        target = {
+            'base_point': 'peak_b', 'side_point1': 'peak_a', 'side_point2': 'peak_c'
+        }
+    elif inside_peak_name == 'peak_c_dash':
+        target = {
+            'base_point': 'peak_c', 'side_point1': 'peak_a', 'side_point2': 'peak_b'
+        }
+
+    return target
+
+
 
     print(case_study_triangle())
 
