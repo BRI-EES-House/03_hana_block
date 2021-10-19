@@ -292,5 +292,12 @@ def get_point_height_from_line(point_coordinate: tuple, p: float, q: float, r: f
     return height
 
 
+def case_study_triangle():
+
+    triangle_coordinates = {'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)}
+    print(transmission_factor_triangle(triangle_coordinates, 10, -50))
 
 
+if __name__ == '__main__':
+
+    case_study_triangle()
