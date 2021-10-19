@@ -114,14 +114,13 @@ def transmission_factor_triangle(coordinates: dict, distance_vertical: float, di
     return rate
 
 
-def get_witch_peak_inside(coordinates_front: dict, coordinates_back: dict) -> dict:
+def get_witch_peak_inside(coordinates: dict) -> dict:
 
     """
     三角形の内側にある頂点を判定する
 
-    :param coordinates_front: 手前側の三角形ABCの各頂点の座標(x, y)
-    :param coordinates_back: 奥側の三角形ABCの各頂点の座標(x, y)
-    :return:三角形の花ブロックの透過率[-]
+    :param coordinates: 手前側の三角形ABC、奥側の三角形ABCのの各頂点の座標(x, y)
+    :return:各頂点の判定結果
     """
 
     # 行列の初期化
@@ -129,23 +128,43 @@ def get_witch_peak_inside(coordinates_front: dict, coordinates_back: dict) -> di
     matrix_const = np.zeros(2)
 
     # 行列に値を設定（係数部分）
-    matrix_coeff[0][0] = coordinates_front['peak_b'][0] - coordinates_front['peak_a'][0]
-    matrix_coeff[0][1] = coordinates_front['peak_c'][0] - coordinates_front['peak_a'][0]
-    matrix_coeff[1][0] = coordinates_front['peak_b'][1] - coordinates_front['peak_a'][1]
-    matrix_coeff[1][1] = coordinates_front['peak_c'][1] - coordinates_front['peak_a'][1]
+    matrix_coeff[0][0] = coordinates['peak_b'][0] - coordinates['peak_a'][0]
+    matrix_coeff[0][1] = coordinates['peak_c'][0] - coordinates['peak_a'][0]
+    matrix_coeff[1][0] = coordinates['peak_b'][1] - coordinates['peak_a'][1]
+    matrix_coeff[1][1] = coordinates['peak_c'][1] - coordinates['peak_a'][1]
 
     # 判定結果を格納するディクショナリを用意
     results = {}
 
     # 頂点Aの判定
-    matrix_const[0] = coordinates_front['peak_a'][0] - coordinates_back['peak_a_dash'][0]
-    matrix_const[1] = coordinates_front['peak_a'][1] - coordinates_back['peak_a_dash'][1]
+    matrix_const[0] = coordinates['peak_a'][0] - coordinates['peak_a_dash'][0]
+    matrix_const[1] = coordinates['peak_a'][1] - coordinates['peak_a_dash'][1]
     results['peak_a'] = judge_is_peak_inside(matrix_coeff, matrix_const)
 
     # 頂点Bの判定
-    matrix_const[0] = coordinates_front['peak_b'][0] - coordinates_back['peak_a_dash'][0]
-    matrix_const[1] = coordinates_front['peak_b'][1] - coordinates_back['peak_a_dash'][1]
+    matrix_const[0] = coordinates['peak_b'][0] - coordinates['peak_a_dash'][0]
+    matrix_const[1] = coordinates['peak_b'][1] - coordinates['peak_a_dash'][1]
     results['peak_b'] = judge_is_peak_inside(matrix_coeff, matrix_const)
+
+    # 頂点Cの判定
+    matrix_const[0] = coordinates['peak_c'][0] - coordinates['peak_a_dash'][0]
+    matrix_const[1] = coordinates['peak_c'][1] - coordinates['peak_a_dash'][1]
+    results['peak_c'] = judge_is_peak_inside(matrix_coeff, matrix_const)
+
+    # 頂点A'の判定
+    matrix_const[0] = coordinates['peak_a_dash'][0] - coordinates['peak_a'][0]
+    matrix_const[1] = coordinates['peak_a_dash'][1] - coordinates['peak_a'][1]
+    results['peak_a_dash'] = judge_is_peak_inside(matrix_coeff, matrix_const)
+
+    # 頂点B'の判定
+    matrix_const[0] = coordinates['peak_b_dash'][0] - coordinates['peak_a'][0]
+    matrix_const[1] = coordinates['peak_b_dash'][1] - coordinates['peak_a'][1]
+    results['peak_b_dash'] = judge_is_peak_inside(matrix_coeff, matrix_const)
+
+    # 頂点C'の判定
+    matrix_const[0] = coordinates['peak_c_dash'][0] - coordinates['peak_a'][0]
+    matrix_const[1] = coordinates['peak_c_dash'][1] - coordinates['peak_a'][1]
+    results['peak_c_dash'] = judge_is_peak_inside(matrix_coeff, matrix_const)
 
     return results
 
