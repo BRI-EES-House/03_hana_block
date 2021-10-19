@@ -27,12 +27,6 @@ def diffused_light_transmission_rate_square(depth: float, width: float, height: 
 
     for index, case in enumerate(random_numbers):
 
-        # # 任意の太陽高度を計算
-        # h_random = math.degrees(math.acos(math.sqrt(1-case[0])))
-        #
-        # # 任意の太陽方位角を計算
-        # a_random = math.degrees(2.0 * math.pi * case[1])
-
         # 点の影の垂直方向、水平方向の移動距離を計算
         distance_vertical, distance_horizontal = dps.distance_of_points_shadow(
             depth=depth,
