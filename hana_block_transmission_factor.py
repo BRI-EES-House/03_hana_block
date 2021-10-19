@@ -76,32 +76,42 @@ def transmission_factor_circle(radius: float, distance_vertical: float, distance
     return rate
 
 
-def transmission_factor_triangle(coordinates_front: dict,
-                                 distance_vertical: float, distance_horizontal: float) -> float:
+def transmission_factor_triangle(coordinates: dict, distance_vertical: float, distance_horizontal: float) -> float:
     """
     三角形の花ブロックの透過率を計算する
 
-    :param coordinates_front: 手前側の三角形ABCの各頂点の座標(x, y)
+    :param coordinates: 手前側の三角形ABCの各頂点の座標(x, y)
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
     :param distance_horizontal: 点の影の水平方向の移動距離[mm]
     :return:三角形の花ブロックの透過率[-]
     """
 
-    # 奥側の三角形A'B'C'の各頂点の座標を設定
-    coordinates_back = {
-        'peak_a_dash': (coordinates_front['peak_a'][0] + distance_vertical,
-                        coordinates_front['peak_a'][1] + distance_horizontal),
-        'peak_b_dash': (coordinates_front['peak_b'][0] + distance_vertical,
-                        coordinates_front['peak_b'][1] + distance_horizontal),
-        'peak_c_dash': (coordinates_front['peak_c'][0] + distance_vertical,
-                        coordinates_front['peak_c'][1] + distance_horizontal)
-    }
+    if math.isnan(distance_horizontal) and math.isnan(distance_vertical):
+        # 点の影の垂直方向の移動距離、水平方向の移動距離がnan値の場合は太陽光線は入射しないので透過率は0とする
+        rate = 0.0
+    else:
+        # 奥側の三角形A'B'C'の各頂点の座標を設定
+        coordinates['peak_a_dash'] = (coordinates['peak_a'][0] + distance_vertical,
+                                      coordinates['peak_a'][1] + distance_horizontal)
+        coordinates['peak_b_dash'] = (coordinates['peak_b'][0] + distance_vertical,
+                                      coordinates['peak_b'][1] + distance_horizontal)
+        coordinates['peak_c_dash'] = (coordinates['peak_c'][0] + distance_vertical,
+                                      coordinates['peak_c'][1] + distance_horizontal)
 
-    results = get_witch_peak_inside(coordinates_front, coordinates_back)
+        # 三角形の内側にある頂点を判定
+        peak_check_results = get_witch_peak_inside(coordinates)
 
-    ratio = 0.0
+        # 透過率を計算
+        if True in peak_check_results.values():
+            # 基準点、内部点の高さを取得
+            h, h_dash = get_point_heights(peak_check_results, coordinates)
+            # 透過率を計算
+            rate = (h_dash / h) ** 2
+        else:
+            # 内側にある頂点が一つもない場合は、三角形は重ならないので透過率=0.0とする
+            rate = 0.0
 
-    return ratio
+    return rate
 
 
 def get_witch_peak_inside(coordinates_front: dict, coordinates_back: dict) -> dict:
