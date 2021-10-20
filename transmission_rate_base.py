@@ -1,13 +1,14 @@
 import math
 import numpy as np
+import common
 
 
-def base_transmission_rate_square(width: float, height: float, distance_vertical: float, distance_horizontal: float) -> float:
+def base_transmission_rate_square(spec: common.HanaBlockSpec,
+                                  distance_vertical: float, distance_horizontal: float) -> float:
     """
     四角形の花ブロックの基準透過率を計算する
 
-    :param width: 幅[mm]
-    :param height: 高さ[mm]
+    :param spec:   花ブロックの仕様
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
     :param distance_horizontal: 点の影の水平方向の移動距離[mm]
     :return: 四角形の花ブロックの基準透過率[-]
@@ -21,24 +22,24 @@ def base_transmission_rate_square(width: float, height: float, distance_vertical
         d_x = abs(distance_horizontal)
         d_y = abs(distance_vertical)
 
-        if d_x >= width or d_y >= height:
+        if d_x >= spec.width or d_y >= spec.height:
             rate = 0.0
         else:
-            # 開口部分の面積、重なり部分の面積を計算
-            area_opening = width * height
-            area_transmit = (width - d_x) * (height - d_y)
+            # 重なり部分の面積を計算
+            area_transmit = (spec.width - d_x) * (spec.height - d_y)
 
             # 透過率を計算
-            rate = area_transmit / area_opening
+            rate = area_transmit / spec.area
 
     return rate
 
 
-def base_transmission_rate_circle(radius: float, distance_vertical: float, distance_horizontal: float) -> float:
+def base_transmission_rate_circle(spec: common.HanaBlockSpec,
+                                  distance_vertical: float, distance_horizontal: float) -> float:
     """
     円形の花ブロックの基準透過率を計算する
 
-    :param radius: 円の半径[mm]
+    :param spec:   花ブロックの仕様
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
     :param distance_horizontal: 点の影の水平方向の移動距離[mm]
     :return: 円形の花ブロックの基準透過率[-]
@@ -52,35 +53,33 @@ def base_transmission_rate_circle(radius: float, distance_vertical: float, dista
         distance = math.sqrt(distance_vertical ** 2 + distance_horizontal ** 2)
 
         # 円の中心点の距離が半径より大きい場合は、円は重ならないので透過率=0.0とする
-        if distance >= 2 * radius:
+        if distance >= 2 * spec.radius:
             area_transmit = 0.0
         else:
             # 扇形の内角[degree]を計算
-            angle = 2 * math.acos((distance ** 2) / (2 * radius * distance))
+            angle = 2 * math.acos((distance ** 2) / (2 * spec.radius * distance))
 
             # 扇形部分の面積を計算
-            area_sector = math.pi * (radius ** 2) * (angle / (2 * math.pi))
+            area_sector = math.pi * (spec.radius ** 2) * (angle / (2 * math.pi))
 
             # 三角形部分の面積を計算
-            area_triangle = 0.5 * (radius ** 2) * math.sin(math.radians(angle))
+            area_triangle = 0.5 * (spec.radius ** 2) * math.sin(math.radians(angle))
 
             # 重なり部分の面積を計算
             area_transmit = 2 * (area_sector - area_triangle)
 
-        # 開口部分の面積を計算
-        area_opening = math.pi * (radius ** 2)
-
         # 透過率を計算
-        rate = area_transmit / area_opening
+        rate = area_transmit / spec.area
 
     return rate
 
 
-def base_transmission_rate_triangle(points: dict, distance_vertical: float, distance_horizontal: float) -> float:
+def base_transmission_rate_triangle(spec: common.HanaBlockSpec,
+                                    distance_vertical: float, distance_horizontal: float) -> float:
     """
     三角形の花ブロックの基準透過率を計算する
 
-    :param points: 手前側の三角形ABCの各頂点の座標(x, y)
+    :param spec:   花ブロックの仕様
     :param distance_vertical: 点の影の垂直方向の移動距離[mm]
     :param distance_horizontal: 点の影の水平方向の移動距離[mm]
     :return:三角形の花ブロックの基準透過率[-]
@@ -91,17 +90,20 @@ def base_transmission_rate_triangle(points: dict, distance_vertical: float, dist
         rate = 0.0
     else:
         # 奥側の三角形A'B'C'の各頂点の座標を設定
-        points['peak_a_dash'] = (points['peak_a'][0] + distance_vertical, points['peak_a'][1] + distance_horizontal)
-        points['peak_b_dash'] = (points['peak_b'][0] + distance_vertical, points['peak_b'][1] + distance_horizontal)
-        points['peak_c_dash'] = (points['peak_c'][0] + distance_vertical, points['peak_c'][1] + distance_horizontal)
+        spec.points['peak_a_dash'] = (spec.points['peak_a'][0] + distance_vertical,
+                                      spec.points['peak_a'][1] + distance_horizontal)
+        spec.points['peak_b_dash'] = (spec.points['peak_b'][0] + distance_vertical,
+                                      spec.points['peak_b'][1] + distance_horizontal)
+        spec.points['peak_c_dash'] = (spec.points['peak_c'][0] + distance_vertical,
+                                      spec.points['peak_c'][1] + distance_horizontal)
 
         # 三角形の内側にある頂点を判定
-        peak_check_results = get_witch_peak_inside(points)
+        peak_check_results = get_witch_peak_inside(spec.points)
 
         # 透過率を計算
         if True in peak_check_results.values():
             # 基準点、内部点の高さを取得
-            h, h_dash = get_point_heights(peak_check_results, points)
+            h, h_dash = get_point_heights(peak_check_results, spec.points)
             # 透過率を計算
             rate = (h_dash / h) ** 2
         else:
