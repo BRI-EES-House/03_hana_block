@@ -291,12 +291,21 @@ def get_point_height_from_line(point_coordinate: tuple, p: float, q: float, r: f
     return height
 
 
-def case_study_triangle():
+def test():
 
-    triangle_points = {'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)}
-    print(base_transmission_rate_triangle(triangle_points, 10, -50))
+    # 四角形の場合
+    spec = common.HanaBlockSpec(type='square', width=130.0, height=130.0)
+    print(base_transmission_rate_square(spec, 10, -50))
+
+    # 円形の場合
+    spec = common.HanaBlockSpec(type='circle', radius=65.0)
+    print(base_transmission_rate_circle(spec, 10, -50))
+
+    # 三角形の場合
+    spec = common.HanaBlockSpec(type='triangle', points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)})
+    print(base_transmission_rate_triangle(spec, 10, -50))
 
 
 if __name__ == '__main__':
 
-    case_study_triangle()
+    test()
