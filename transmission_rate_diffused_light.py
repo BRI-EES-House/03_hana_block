@@ -2,47 +2,49 @@ import numpy as np
 import math
 import statistics
 import itertools
-import distance_point_shadow as dps
-import transmission_rate_base as trb
+import common
+import distance_point_shadow
+import transmission_rate_base
 
 
-def diffused_light_transmission_rate_square(depth: float, width: float, height: float,
-                                            surface_inclination_angle: float, surface_azimuth_angle: float) -> float:
+def diffused_light_transmission_rate(spec: common.HanaBlockSpec) -> float:
     """
     四角形の花ブロックの拡散光の透過率を計算する
 
-    :param depth: 奥行[mm]
-    :param width: 幅[mm]
-    :param height: 高さ[mm]
-    :param surface_inclination_angle:  面の傾斜角[degrees]
-    :param surface_azimuth_angle:  面の方位角[degrees]
+    :param spec:   花ブロックの仕様
     :return:四角形の花ブロックの拡散光の透過率[-]
     """
 
     # 各乱数の総当たりの組み合わせを設定
-    random_numbers = get_random_number_list()
+    random_numbers_cases = get_random_number_list()
 
     # 結果格納用の配列を用意
     rate_s = []
 
-    for index, case in enumerate(random_numbers):
+    for index, case in enumerate(random_numbers_cases):
 
         # 点の影の垂直方向、水平方向の移動距離を計算
-        distance_vertical, distance_horizontal = dps.distance_of_points_shadow(
-            depth=depth,
+        distance_vertical, distance_horizontal = distance_point_shadow.distance_of_points_shadow(
+            spec=spec,
             sun_altitude=get_random_sun_altitude(case[0]),
-            sun_azimuth_angle=get_random_sun_azimuth_angle(case[1]),
-            surface_inclination_angle=surface_inclination_angle,
-            surface_azimuth_angle=surface_azimuth_angle
+            sun_azimuth_angle=get_random_sun_azimuth_angle(case[1])
         )
 
-        # 透過率を計算し、配列に追加
-        rate_s.append(
-            trb.base_transmission_rate_square(width=width, height=height,
-                                              distance_vertical=distance_vertical,
-                                              distance_horizontal=distance_horizontal
-                                              )
-        )
+        # 透過率を計算
+        if spec.type == 'square':
+            buf_rate = transmission_rate_base.base_transmission_rate_square(
+                spec=spec, distance_vertical=distance_vertical, distance_horizontal=distance_horizontal)
+        elif spec.type == 'circle':
+            buf_rate = transmission_rate_base.base_transmission_rate_circle(
+                spec=spec, distance_vertical=distance_vertical, distance_horizontal=distance_horizontal)
+        elif spec.type == 'triangle':
+            buf_rate = transmission_rate_base.base_transmission_rate_triangle(
+                spec=spec, distance_vertical=distance_vertical, distance_horizontal=distance_horizontal)
+        else:
+            raise ValueError('花ブロックのタイプ「' + spec.type + '」は対象外です')
+
+        # 透過率を配列に追加
+        rate_s.append(buf_rate)
 
     return statistics.mean(rate_s)
 
@@ -92,10 +94,21 @@ def get_random_sun_azimuth_angle(random_number: float) -> float:
 
 def case_study():
 
-    print(
-        diffused_light_transmission_rate_square(
-            depth=100, width=130, height=130, surface_inclination_angle=90, surface_azimuth_angle=0)
-    )
+    # 四角形の場合
+    spec = common.HanaBlockSpec(
+        type='square', depth=100, inclination_angle=90, azimuth_angle=0, width=130.0, height=130.0)
+    print(diffused_light_transmission_rate(spec))
+
+    # 円形の場合
+    spec = common.HanaBlockSpec(
+        type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=65.0)
+    print(diffused_light_transmission_rate(spec))
+
+    # 三角形の場合
+    spec = common.HanaBlockSpec(
+        type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
+        points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)})
+    print(diffused_light_transmission_rate(spec))
 
 
 if __name__ == '__main__':
