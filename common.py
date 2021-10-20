@@ -8,6 +8,15 @@ class HanaBlockSpec:
     # 花ブロックの形状（四角形：square、円形：circle、三角形：triangle）
     type: str
 
+    # 花ブロックの奥行, mm
+    depth: float = 0.0
+
+    # 花ブロックの傾斜角, degree
+    inclination_angle: float = 90.0
+
+    # 花ブロックの方位角, degree
+    azimuth_angle: float = 0.0
+
     # 花ブロック開口部の幅,　mm
     width: float = 0.0
 
