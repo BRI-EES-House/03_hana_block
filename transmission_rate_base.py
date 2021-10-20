@@ -59,16 +59,16 @@ def base_transmission_rate_circle(radius: float, distance_vertical: float, dista
             angle = 2 * math.acos((distance ** 2) / (2 * radius * distance))
 
             # 扇形部分の面積を計算
-            area_sector = math.pi * radius ** 2 * (angle / (2 * math.pi))
+            area_sector = math.pi * (radius ** 2) * (angle / (2 * math.pi))
 
             # 三角形部分の面積を計算
-            area_triangle = 0.5 * radius ** 2 * math.sin(math.radians(angle))
+            area_triangle = 0.5 * (radius ** 2) * math.sin(math.radians(angle))
 
             # 重なり部分の面積を計算
             area_transmit = 2 * (area_sector - area_triangle)
 
         # 開口部分の面積を計算
-        area_opening = math.pi * radius ** 2
+        area_opening = math.pi * (radius ** 2)
 
         # 透過率を計算
         rate = area_transmit / area_opening
