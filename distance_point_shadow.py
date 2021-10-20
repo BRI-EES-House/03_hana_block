@@ -1,18 +1,17 @@
 import math
 import numpy as np
+import common
 
 
-def distance_of_points_shadow(depth: float, sun_altitude: float, sun_azimuth_angle: float,
-                              surface_inclination_angle: float, surface_azimuth_angle: float) -> [float, float]:
+def distance_of_points_shadow(spec: common.HanaBlockSpec,
+                              sun_altitude: float, sun_azimuth_angle: float,) -> [float, float]:
 
     """
     点の影の垂直方向、水平方向の移動距離を計算する
 
-    :param depth: 奥行[mm]
+    :param spec:   花ブロックの仕様
     :param sun_altitude: 太陽高度[degrees]
     :param sun_azimuth_angle: 太陽方位角[degrees]
-    :param surface_inclination_angle:  面の傾斜角[degrees]
-    :param surface_azimuth_angle:  面の方位角[degrees]
     :return: 点の影の垂直方向、水平方向の移動距離[mm]
     """
 
@@ -21,7 +20,8 @@ def distance_of_points_shadow(depth: float, sun_altitude: float, sun_azimuth_ang
 
     # 傾斜面法線の方向余弦を計算
     w_z, w_w, w_s = direction_cosine_of_slope_normal_line(
-        surface_inclination_angle=surface_inclination_angle, surface_azimuth_angle=surface_azimuth_angle)
+        surface_inclination_angle=spec.inclination_angle,
+        surface_azimuth_angle=spec.azimuth_angle)
 
     # 太陽光線の入射角の余弦を計算
     cos_theta = cosine_sun_incidence_angle(s_h=s_h, s_w=s_w, s_s=s_s, w_z=w_z, w_w=w_w, w_s=w_s)
@@ -33,22 +33,19 @@ def distance_of_points_shadow(depth: float, sun_altitude: float, sun_azimuth_ang
     if cos_theta < error_value:
         distance_vertical = np.nan
         distance_horizontal = np.nan
-        # tan_phi = 0.0
-        # tan_gamma = 0.0
-
     else:
         # 見かけの太陽高度（プロファイル角）の正接を計算
         tan_phi = tangent_profile_angle(s_h=s_h, s_w=s_w, s_s=s_s, cos_theta=cos_theta,
-                                        surface_inclination_angle=surface_inclination_angle,
-                                        surface_azimuth_angle=surface_azimuth_angle)
+                                        surface_inclination_angle=spec.inclination_angle,
+                                        surface_azimuth_angle=spec.azimuth_angle)
 
         # 面の太陽方位角の正接を計算
         tan_gamma = tangent_sun_azimuth_angle_of_surface(s_w=s_w, s_s=s_s, cos_theta=cos_theta,
-                                                         surface_azimuth_angle=surface_azimuth_angle)
+                                                         surface_azimuth_angle=spec.azimuth_angle)
 
         # 点の影の垂直方向、水平方向の移動距離を計算
-        distance_vertical = depth * tan_phi
-        distance_horizontal = depth * tan_gamma
+        distance_vertical = spec.depth * tan_phi
+        distance_horizontal = spec.depth * tan_gamma
 
     return distance_vertical, distance_horizontal
 
