@@ -26,11 +26,8 @@ def distance_of_points_shadow(spec: common.HanaBlockSpec,
     # 太陽光線の入射角の余弦を計算
     cos_theta = cosine_sun_incidence_angle(s_h=s_h, s_w=s_w, s_s=s_s, w_z=w_z, w_w=w_w, w_s=w_s)
 
-    # 誤差値を規定
-    error_value = 0.0001
-
     # cos_thetaが誤差値未満の場合は計算しない（太陽が対象面の裏側にある）
-    if cos_theta < error_value:
+    if cos_theta < common.get_error_value():
         distance_vertical = np.nan
         distance_horizontal = np.nan
     else:
@@ -64,11 +61,8 @@ def tangent_profile_angle(s_h: float, s_w: float, s_s: float, cos_theta: float,
     :return: 太陽光線の入射角[degrees]
     """
 
-    # 誤差値を規定
-    error_value = 0.0001
-
     # cos_thetaが誤差値未満の場合は計算しない（太陽が対象面の裏側にある）
-    if cos_theta < error_value:
+    if cos_theta < common.get_error_value():
         tan_phi = np.nan
     else:
         tan_phi = (s_h * math.sin(math.radians(surface_inclination_angle))
@@ -91,11 +85,8 @@ def tangent_sun_azimuth_angle_of_surface(s_w: float, s_s: float, cos_theta: floa
     :return: 面の太陽方位角の正接[-]
     """
 
-    # 誤差値を規定
-    error_value = 0.0001
-
     # cos_thetaが誤差値未満の場合は計算しない（太陽が対象面の裏側にある）
-    if cos_theta < error_value:
+    if cos_theta < common.get_error_value():
         tan_gamma = np.nan
     else:
         tan_gamma = (s_w * math.cos(math.radians(surface_azimuth_angle))
