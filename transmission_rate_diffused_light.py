@@ -57,8 +57,8 @@ def get_random_number_list() -> list:
     :return:乱数の総当たりの組み合わせ
     """
 
-    # 乱数のステップ数を設定（総ケース数が10^4になるように設定）
-    r_step = 1.0 / math.sqrt(10 ** 4)
+    # 乱数のステップ数を設定（総ケース数が10^6になるように設定）
+    r_step = 1.0 / math.sqrt(10 ** 6)
 
     # 太陽高度を設定するための乱数を設定
     r_h = np.arange(0, 1 + r_step, r_step, dtype=float)
@@ -96,18 +96,28 @@ def case_study():
 
     # 四角形の場合
     spec = common.HanaBlockSpec(
-        type='square', depth=100, inclination_angle=90, azimuth_angle=0, width=130.0, height=130.0)
+        type='square', depth=100, inclination_angle=90, azimuth_angle=0, width=136.0, height=136.0)
+    print(spec.type + ':')
     print(diffused_light_transmission_rate(spec))
 
     # 円形の場合
     spec = common.HanaBlockSpec(
-        type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=65.0)
+        type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=136.0 / 2.0)
+    print(spec.type + ':')
     print(diffused_light_transmission_rate(spec))
 
-    # 三角形の場合
+    # 三角形の場合（その1）
     spec = common.HanaBlockSpec(
         type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
-        points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)})
+        points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 130)})
+    print(spec.type + ':')
+    print(diffused_light_transmission_rate(spec))
+
+    # 三角形の場合（その2）
+    spec = common.HanaBlockSpec(
+        type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
+        points={'peak_a': (0, 0), 'peak_b': (130, 130), 'peak_c': (0, 130)})
+    print(spec.type + ':')
     print(diffused_light_transmission_rate(spec))
 
 
