@@ -48,11 +48,35 @@ class HanaBlockSpec:
             raise ValueError('花ブロックのタイプ「' + self.type + '」は対象外です')
 
 
+def get_error_value() -> float:
+    """
+    :return: 誤差値, -
+    """
+    return 0.0001
+
+
 def get_surface_albedo() -> float:
     """
     :return: 地面の日射反射率（アルベド）, -
     """
     return 0.2
+
+
+def get_direction_list() -> dict:
+    """
+    :return: 方位名称と方位角のリスト
+    """
+    directions = {
+        'N': 180.0,
+        'NE': -135.0,
+        'E': -90.0,
+        'SE': -45.0,
+        'S': 0.0,
+        'SW': 45.0,
+        'W': 90.0,
+        'NW': 135.0
+    }
+    return directions
 
 
 def test():
