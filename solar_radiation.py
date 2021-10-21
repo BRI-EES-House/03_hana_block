@@ -44,13 +44,19 @@ def get_direct_radiation(normal_surface_direct_radiation: float, solar_altitude:
     :return: 傾斜面直達日射量, W/m2
     """
 
-    # 傾斜面に対する太陽光線の入射角, degree
+    # 傾斜面に対する太陽光線の入射角の余弦, degree
     sunlight_incidence_angle\
         = math.sin(math.radians(solar_altitude)) * math.cos(math.radians(surface_inclination_angle))\
           + math.cos(math.radians(solar_altitude)) * math.sin(math.radians(surface_inclination_angle))\
           * math.cos(math.radians(solar_azimuth - surface_azimuth_angle))
 
-    return normal_surface_direct_radiation * sunlight_incidence_angle
+    # 太陽光線の入射角の余弦が0より小さい場合は直達日射はない
+    if sunlight_incidence_angle < common.get_error_value():
+        d_radiation = 0.0
+    else:
+        d_radiation = normal_surface_direct_radiation * sunlight_incidence_angle
+
+    return d_radiation
 
 
 def get_diffuse_radiation(horizontal_surface_sky_radiation: float, surface_inclination_angle: float) -> float:
