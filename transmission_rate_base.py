@@ -212,13 +212,15 @@ def get_point_heights(peak_check_results: dict, points: dict) -> [float, float]:
     side_point2 = points[target['side_point2']]
 
     # 対辺の2点を結ぶ一次方程式の係数を取得
-    p, q, r = get_linear_equation(side_point1, side_point2)
+    p, q, r = get_linear_equation(*side_point1, *side_point2)
 
     # 対辺からの基準点の高さを計算
-    h = get_point_height_from_line(point_coordinate=base_point, p=p, q=q, r=r)
+    h = get_point_height_from_line(*base_point, p, q, r)
+    # h = get_point_height_from_line(point_coordinate=base_point, p=p, q=q, r=r)
 
     # 対辺からの内部点の高さを計算
-    h_dash = get_point_height_from_line(point_coordinate=inside_point, p=p, q=q, r=r)
+    h_dash = get_point_height_from_line(*inside_point, p, q, r)
+    # h_dash = get_point_height_from_line(point_coordinate=inside_point, p=p, q=q, r=r)
 
     return h, h_dash
 
@@ -261,33 +263,41 @@ def get_target_base_point_and_side(inside_peak_name: str) -> dict:
     return target
 
 
-def get_linear_equation(points_01: tuple, points_02: tuple) -> [float, float, float]:
+def get_linear_equation(x_1: float, y_1: float, x_2: float, y_2: float) -> [float, float, float]:
     """
         2点を通る一次方程式（px+qy+r=0）の各係数p,q,rを計算する
 
-        :param points_01: 1つ目の点の座標(x, y)
-        :param points_02: 2つ目の点の座標(x, y)
+        :param x_1: 1つ目の点のx座標
+        :param y_1: 1つ目の点のy座標
+        :param x_2: 2つ目の点のx座標
+        :param y_2: 2つ目の点のy座標
         :return:一次方程式（px+qy+r=0）の各係数p,q,r
     """
-    p = (points_02[1] - points_01[1]) / (points_02[0] - points_01[0])
-    q = -1.0
-    r = (points_02[0] * points_01[1] - points_01[0] * points_02[1])\
-        / (points_02[0] - points_01[0])
+
+    if abs(x_1 - x_2) < common.get_error_value():
+        p = 1.0
+        q = 0.0
+        r = -x_1
+    else:
+        p = (y_2 - y_1) / (x_2 - x_1)
+        q = -1.0
+        r = (x_2 * y_1 - x_1 * y_2) / (x_2 - x_1)
 
     return p, q, r
 
 
-def get_point_height_from_line(point_coordinate: tuple, p: float, q: float, r: float) -> float:
+def get_point_height_from_line(x: float, y: float, p: float, q: float, r: float) -> float:
     """
         直線からの点の高さを計算する
 
-        :param point_coordinate: 対象となる点の座標(x, y)
+        :param x: 対象となる点のx座標
+        :param y: 対象となる点のy座標
         :param p: 一次方程式（px+qy+r=0）の係数
         :param q: 一次方程式（px+qy+r=0）の係数
         :param r: 一次方程式（px+qy+r=0）の係数
         :return:一次方程式（px+qy+r=0）の各係数p,q,r
     """
-    height = abs(p * point_coordinate[0] + q * point_coordinate[1] + r) / math.sqrt(p ** 2 + q ** 2)
+    height = abs(p * x + q * y + r) / math.sqrt(p ** 2 + q ** 2)
     return height
 
 
