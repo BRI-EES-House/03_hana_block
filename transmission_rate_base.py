@@ -1,6 +1,7 @@
 import math
 import numpy as np
 import common
+import distance_point_shadow
 
 
 def base_transmission_rate_square(spec: common.HanaBlockSpec,
@@ -304,16 +305,29 @@ def get_point_height_from_line(x: float, y: float, p: float, q: float, r: float)
 def test():
 
     # 四角形の場合
-    spec = common.HanaBlockSpec(type='square', width=130.0, height=130.0)
-    print(base_transmission_rate_square(spec, 10, -50))
+    spec = common.HanaBlockSpec(
+        type='square', depth=100, inclination_angle=90, azimuth_angle=0, width=136.0, height=136.0)
+    dx, dy = \
+        distance_point_shadow.distance_of_points_shadow(spec=spec, sun_altitude=2.0,
+                                                        sun_azimuth_angle=-59)
+    print(base_transmission_rate_square(spec=spec, distance_horizontal=dx, distance_vertical=dy))
 
     # 円形の場合
-    spec = common.HanaBlockSpec(type='circle', radius=65.0)
-    print(base_transmission_rate_circle(spec, 10, -50))
+    spec = common.HanaBlockSpec(
+        type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=136.0 / 2.0)
+    dx, dy = \
+        distance_point_shadow.distance_of_points_shadow(spec=spec, sun_altitude=-30,
+                                                        sun_azimuth_angle=-14)
+    print(base_transmission_rate_circle(spec=spec, distance_horizontal=dx, distance_vertical=dy))
 
-    # 三角形の場合
-    spec = common.HanaBlockSpec(type='triangle', points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)})
-    print(base_transmission_rate_triangle(spec, 10, -50))
+    # 三角形01の場合
+    spec = common.HanaBlockSpec(
+        type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
+        points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 130)})
+    dx, dy = \
+        distance_point_shadow.distance_of_points_shadow(spec=spec, sun_altitude=-30,
+                                                        sun_azimuth_angle=-14)
+    print(base_transmission_rate_triangle(spec=spec, distance_horizontal=dx, distance_vertical=dy))
 
 
 if __name__ == '__main__':
