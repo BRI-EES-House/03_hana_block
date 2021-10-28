@@ -115,7 +115,7 @@ def case_study():
 
     # 三角形の場合（その2）
     spec = common.HanaBlockSpec(
-        type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
+        type='triangle', depth=150, inclination_angle=90, azimuth_angle=0,
         points={'peak_a': (0, 0), 'peak_b': (130, 130), 'peak_c': (0, 130)})
     print(spec.type + ':')
     print(diffused_light_transmission_rate(spec))
