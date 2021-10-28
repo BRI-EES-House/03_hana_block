@@ -32,7 +32,7 @@ def case_study_single():
 
     # 三角形の場合（その2）
     spec = common.HanaBlockSpec(
-        type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
+        type='triangle', depth=150, inclination_angle=90, azimuth_angle=0,
         points={'peak_a': (0, 0), 'peak_b': (130, 130), 'peak_c': (0, 130)})
     total_transmission_rate(case_name='04', spec=spec)
 
