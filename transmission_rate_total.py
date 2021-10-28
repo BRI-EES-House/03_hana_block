@@ -126,6 +126,12 @@ def total_transmission_rate(case_name: str, spec: common.HanaBlockSpec):
                 else:
                     raise ValueError('花ブロックのタイプ「' + spec.type + '」は対象外です')
 
+                # 花ブロックの直達日射に対する透過率を計算（傾斜面直達日射量が誤差値未満の場合は計算しない）
+                if i_d_t < common.get_error_value():
+                    tau_d_t = 0.0
+                else:
+                    tau_d_t = (i_d_t * tau_d_t) / i_d_t
+
                 # 花ブロックの総合透過率を計算（傾斜面日射量が誤差値未満の場合は計算しない）
                 if i_total < common.get_error_value():
                     tau_total = 0.0
