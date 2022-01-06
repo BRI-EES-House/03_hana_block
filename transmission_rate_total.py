@@ -64,7 +64,18 @@ def total_transmission_rate(case_name: str, calc_mode: str, spec: common.HanaBlo
         df_climate = get_climate_data(region)
 
         # 方位リストを取得
-        directions = common.get_direction_list()
+        if calc_mode == 'analysis':
+            directions = common.get_direction_list()
+        elif calc_mode == 'mesh':
+            # メッシュ法は計算時間が長いため、検証用に4方位に絞る
+            directions = {
+                'N': 180.0,
+                'E': -90.0,
+                'S': 0.0,
+                'W': 90.0
+            }
+        else:
+            raise ValueError('計算モード「' + calc_mode + '」は対象外です')
 
         # 方位ループ
         for direction, angle in directions.items():
@@ -180,11 +191,12 @@ def total_transmission_rate(case_name: str, calc_mode: str, spec: common.HanaBlo
             )
 
 
-def get_climate_data(region: int) -> pd.DataFrame:
+def get_climate_data(region: int, calc_mode: str) -> pd.DataFrame:
     """
     地域区分別の気象データを読み込む関数
 
     :param region:  地域区分の番号
+    :param calc_mode:   計算モード
     :return: 指定した地域の気象データ（DataFrame）
     """
 
@@ -205,7 +217,26 @@ def get_climate_data(region: int) -> pd.DataFrame:
                  '水平面夜間放射量 [W/m2]': '水平面夜間放射量_W_m2', '太陽高度角[度]': '太陽高度角_度',
                  '太陽方位角[度]': '太陽方位角_度'})
 
-    return df
+    if calc_mode == 'analysis':
+        df_target = df
+    elif calc_mode == 'mesh':
+        # メッシュ法の場合、計算時間が長いため、ここでは春分、夏至、秋分、冬至のみに絞る
+
+        # データ抽出日の設定
+        target_dates = {
+            'spring': {'月': 3, '日': 23, 'color': 'g'},
+            'summer': {'月': 6, '日': 22, 'color': 'r'},
+            'autumn': {'月': 9, '日': 21, 'color': 'y'},
+            'winter': {'月': 12, '日': 22, 'color': 'b'}
+        }
+
+        # 散布図の描画設定
+        df_target = pd.DataFrame()
+        for key, value in target_dates.items():
+            df_abstract = df.query('月 == ' + str(value['月']) + ' & 日 == ' + str(value['日']))
+            df_target = pd.concat([df_target, df_abstract])
+
+    return df_target
 
 
 if __name__ == '__main__':
