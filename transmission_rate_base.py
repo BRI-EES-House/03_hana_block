@@ -57,14 +57,14 @@ def base_transmission_rate_circle(spec: common.HanaBlockSpec,
         if distance >= 2 * spec.radius:
             area_transmit = 0.0
         else:
-            # 扇形の内角[degree]を計算
+            # 扇形の内角[rad]を計算
             angle = 2 * math.acos((distance ** 2) / (2 * spec.radius * distance))
 
             # 扇形部分の面積を計算
             area_sector = math.pi * (spec.radius ** 2) * (angle / (2 * math.pi))
 
             # 三角形部分の面積を計算
-            area_triangle = 0.5 * (spec.radius ** 2) * math.sin(math.radians(angle))
+            area_triangle = 0.5 * (spec.radius ** 2) * math.sin(angle)
 
             # 重なり部分の面積を計算
             area_transmit = 2 * (area_sector - area_triangle)
@@ -316,8 +316,8 @@ def test():
     spec = common.HanaBlockSpec(
         type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=136.0 / 2.0)
     dx, dy = \
-        distance_point_shadow.distance_of_points_shadow(spec=spec, sun_altitude=-30,
-                                                        sun_azimuth_angle=-14)
+        distance_point_shadow.distance_of_points_shadow(spec=spec, sun_altitude=32,
+                                                        sun_azimuth_angle=-1)
     print(base_transmission_rate_circle(spec=spec, distance_horizontal=dx, distance_vertical=dy))
 
     # 三角形01の場合
