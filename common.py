@@ -34,16 +34,23 @@ class HanaBlockSpec:
 
     def __post_init__(self):
 
-        # 花ブロックの開口面積を計算
+        # 花ブロックの開口面積を計算、四角形、円形の場合は座標を設定
         if self.type == 'square':
             self.area = self.width * self.height
+            self.points = {'peak_a': (0, 0), 'peak_b': (self.width, 0),
+                           'peak_c': (self.width, self.height),  'peak_d': (0, self.height)}
         elif self.type == 'circle':
             self.area = math.pi * (self.radius ** 2)
+            self.points = {'peak_a': (self.radius, self.radius)}
+            self.width = self.radius * 2
+            self.height = self.radius * 2
         elif self.type == 'triangle':
             (ax, ay) = self.points['peak_a']
             (bx, by) = self.points['peak_b']
             (cx, cy) = self.points['peak_c']
             self.area = 1/2 * abs((cx - ax) * (by - ay) - (bx - ax) * (by - ay))
+            self.width = max(ax, bx, cx)
+            self.height = max(ay, by, cy)
         else:
             raise ValueError('花ブロックのタイプ「' + self.type + '」は対象外です')
 
