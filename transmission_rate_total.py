@@ -4,6 +4,7 @@ import solar_radiation
 import distance_point_shadow
 import transmission_rate_base
 import transmission_rate_diffused_light
+import transmission_rate_base_mesh_method
 
 
 def case_study_single():
@@ -14,34 +15,38 @@ def case_study_single():
     :return: なし
     """
 
+    # 計算モードの設定（analysis:解析法  ,mesh:メッシュ法）
+    calc_mode = 'analysis'
+
     # 四角形の場合
     spec = common.HanaBlockSpec(
         type='square', depth=100, inclination_angle=90, azimuth_angle=0, width=136.0, height=136.0)
-    total_transmission_rate(case_name='01', spec=spec)
+    total_transmission_rate(case_name='01', calc_mode=calc_mode, spec=spec)
 
     # 円形の場合
     spec = common.HanaBlockSpec(
         type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=136.0/2.0)
-    total_transmission_rate(case_name='02', spec=spec)
+    total_transmission_rate(case_name='02', calc_mode=calc_mode, spec=spec)
 
     # 三角形の場合（その1）
     spec = common.HanaBlockSpec(
         type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
         points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 130)})
-    total_transmission_rate(case_name='03', spec=spec)
+    total_transmission_rate(case_name='03', calc_mode=calc_mode, spec=spec)
 
     # 三角形の場合（その2）
     spec = common.HanaBlockSpec(
         type='triangle', depth=150, inclination_angle=90, azimuth_angle=0,
         points={'peak_a': (0, 0), 'peak_b': (130, 130), 'peak_c': (0, 130)})
-    total_transmission_rate(case_name='04', spec=spec)
+    total_transmission_rate(case_name='04', calc_mode=calc_mode, spec=spec)
 
 
-def total_transmission_rate(case_name: str, spec: common.HanaBlockSpec):
+def total_transmission_rate(case_name: str, calc_mode: str, spec: common.HanaBlockSpec):
     """
     花ブロックの総合透過率を計算し、結果をCSVファイルに出力する
 
     :param case_name:   検討ケース名称
+    :param calc_mode:   計算モード
     :param spec:        花ブロックの仕様
     :return: なし
     """
@@ -114,17 +119,29 @@ def total_transmission_rate(case_name: str, spec: common.HanaBlockSpec):
                 )
 
                 # 花ブロックの直達光の透過率を計算
-                if spec.type == 'square':
-                    tau_d_t = transmission_rate_base.base_transmission_rate_square(
-                        spec=spec, distance_vertical=d_y, distance_horizontal=d_x)
-                elif spec.type == 'circle':
-                    tau_d_t = transmission_rate_base.base_transmission_rate_circle(
-                        spec=spec, distance_vertical=d_y, distance_horizontal=d_x)
-                elif spec.type == 'triangle':
-                    tau_d_t = transmission_rate_base.base_transmission_rate_triangle(
-                        spec=spec, distance_vertical=d_y, distance_horizontal=d_x)
+                # 計算モードが「analysis（解析法）」の場合
+                if calc_mode == 'analysis':
+                    if spec.type == 'square':
+                        tau_d_t = transmission_rate_base.base_transmission_rate_square(
+                            spec=spec, distance_vertical=d_y, distance_horizontal=d_x
+                        )
+                    elif spec.type == 'circle':
+                        tau_d_t = transmission_rate_base.base_transmission_rate_circle(
+                            spec=spec, distance_vertical=d_y, distance_horizontal=d_x
+                        )
+                    elif spec.type == 'triangle':
+                        tau_d_t = transmission_rate_base.base_transmission_rate_triangle(
+                            spec=spec, distance_vertical=d_y, distance_horizontal=d_x
+                        )
+                    else:
+                        raise ValueError('花ブロックのタイプ「' + spec.type + '」は対象外です')
+                # 計算モードが「mesh（メッシュ法）」の場合
+                elif calc_mode == 'mesh':
+                    tau_d_t = transmission_rate_base_mesh_method.base_transmission_rate(
+                        spec=spec, distance_vertical=d_y, distance_horizontal=d_x
+                    )
                 else:
-                    raise ValueError('花ブロックのタイプ「' + spec.type + '」は対象外です')
+                    raise ValueError('計算モード「' + calc_mode + '」は対象外です')
 
                 # 花ブロックの直達日射に対する透過率を計算（傾斜面直達日射量が誤差値未満の場合は計算しない）
                 if i_d_t < common.get_error_value():
@@ -158,7 +175,7 @@ def total_transmission_rate(case_name: str, spec: common.HanaBlockSpec):
 
             # CSVファイル出力
             df.to_csv(
-                'result' + '/' + 'case' + case_name + '_' + 'region' + str(region) + '_' + direction + '.csv',
+                'result' + '/' + calc_mode + '_case' + case_name + '_' + 'region' + str(region) + '_' + direction + '.csv',
                 encoding="shift-jis"
             )
 
