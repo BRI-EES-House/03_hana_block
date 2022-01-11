@@ -18,35 +18,55 @@ def case_study_single():
     # 計算モードの設定（analysis:解析法  ,mesh:メッシュ法）
     calc_mode = 'analysis'
 
+    # 地域区分のリストを設定
+    regions = [1, 6, 8]
+
+    # 方位リストを設定
+    if calc_mode == 'analysis':
+        directions = common.get_direction_list()
+    elif calc_mode == 'mesh':
+        # メッシュ法は計算時間が長いため、検証用に4方位に絞る
+        directions = {
+            'N': 180.0,
+            'E': -90.0,
+            'S': 0.0,
+            'W': 90.0
+        }
+    else:
+        raise ValueError('計算モード「' + calc_mode + '」は対象外です')
+
     # 四角形の場合
     spec = common.HanaBlockSpec(
         type='square', depth=100, inclination_angle=90, azimuth_angle=0, width=136.0, height=136.0)
-    total_transmission_rate(case_name='01', calc_mode=calc_mode, spec=spec)
+    total_transmission_rate(case_name='01', calc_mode=calc_mode, regions=regions, directions=directions, spec=spec)
 
     # 円形の場合
     spec = common.HanaBlockSpec(
         type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=136.0/2.0)
-    total_transmission_rate(case_name='02', calc_mode=calc_mode, spec=spec)
+    total_transmission_rate(case_name='02', calc_mode=calc_mode, regions=regions, directions=directions, spec=spec)
 
     # 三角形の場合（その1）
     spec = common.HanaBlockSpec(
         type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
         points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 130)})
-    total_transmission_rate(case_name='03', calc_mode=calc_mode, spec=spec)
+    total_transmission_rate(case_name='03', calc_mode=calc_mode, regions=regions, directions=directions, spec=spec)
 
     # 三角形の場合（その2）
     spec = common.HanaBlockSpec(
         type='triangle', depth=150, inclination_angle=90, azimuth_angle=0,
         points={'peak_a': (0, 0), 'peak_b': (130, 130), 'peak_c': (0, 130)})
-    total_transmission_rate(case_name='04', calc_mode=calc_mode, spec=spec)
+    total_transmission_rate(case_name='04', calc_mode=calc_mode, regions=regions, directions=directions, spec=spec)
 
 
-def total_transmission_rate(case_name: str, calc_mode: str, spec: common.HanaBlockSpec):
+def total_transmission_rate(case_name: str, calc_mode: str, regions: [int], directions: dict,
+                            spec: common.HanaBlockSpec):
     """
     花ブロックの総合透過率を計算し、結果をCSVファイルに出力する
 
     :param case_name:   検討ケース名称
     :param calc_mode:   計算モード
+    :param regions:     地域区分番号（リスト）
+    :param directions:  方位名称と方位角のリスト
     :param spec:        花ブロックの仕様
     :return: なし
     """
@@ -54,28 +74,11 @@ def total_transmission_rate(case_name: str, calc_mode: str, spec: common.HanaBlo
     # 拡散光の透過率を計算
     tau_s = transmission_rate_diffused_light.diffused_light_transmission_rate(spec=spec)
 
-    # 地域区分のリストを設定
-    regions = [1, 6, 8]
-
     # 地域区分ループ
     for region in regions:
 
         # 1年間の気象データを取得
-        df_climate = get_climate_data(region)
-
-        # 方位リストを取得
-        if calc_mode == 'analysis':
-            directions = common.get_direction_list()
-        elif calc_mode == 'mesh':
-            # メッシュ法は計算時間が長いため、検証用に4方位に絞る
-            directions = {
-                'N': 180.0,
-                'E': -90.0,
-                'S': 0.0,
-                'W': 90.0
-            }
-        else:
-            raise ValueError('計算モード「' + calc_mode + '」は対象外です')
+        df_climate = get_climate_data(region=region, calc_mode=calc_mode)
 
         # 方位ループ
         for direction, angle in directions.items():
@@ -217,6 +220,7 @@ def get_climate_data(region: int, calc_mode: str) -> pd.DataFrame:
                  '水平面夜間放射量 [W/m2]': '水平面夜間放射量_W_m2', '太陽高度角[度]': '太陽高度角_度',
                  '太陽方位角[度]': '太陽方位角_度'})
 
+    df_target = pd.DataFrame()
     if calc_mode == 'analysis':
         df_target = df
     elif calc_mode == 'mesh':
@@ -231,7 +235,6 @@ def get_climate_data(region: int, calc_mode: str) -> pd.DataFrame:
         }
 
         # 散布図の描画設定
-        df_target = pd.DataFrame()
         for key, value in target_dates.items():
             df_abstract = df.query('月 == ' + str(value['月']) + ' & 日 == ' + str(value['日']))
             df_target = pd.concat([df_target, df_abstract])
