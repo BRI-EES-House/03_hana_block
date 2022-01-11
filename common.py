@@ -32,20 +32,53 @@ class HanaBlockSpec:
     # 花ブロックの面積, mm2
     area: float = dataclasses.field(init=False)
 
+    # 花ブロック開口部の周長, mm
+    perimeter: float = dataclasses.field(init=False)
+
+    # ブロック前面の幅, mm
+    front_width: float = 0.0
+
+    # ブロック前面の高さ, mm
+    front_height: float = 0.0
+
+    # ブロック前面の面積, mm2
+    front_area: float = dataclasses.field(init=False)
+
+    # 花ブロック仕切り面積の比, -
+    partition_area_rate: float = dataclasses.field(init=False)
+
     def __post_init__(self):
 
-        # 花ブロックの開口面積を計算
+        # 花ブロックの開口面積、周長を計算、四角形、円形の場合は座標を設定
         if self.type == 'square':
             self.area = self.width * self.height
+            self.points = {'peak_a': (0, 0), 'peak_b': (self.width, 0),
+                           'peak_c': (self.width, self.height),  'peak_d': (0, self.height)}
+            self.perimeter = (self.width + self.height) * 2
         elif self.type == 'circle':
             self.area = math.pi * (self.radius ** 2)
+            self.points = {'peak_a': (self.radius, self.radius)}
+            self.width = self.radius * 2
+            self.height = self.radius * 2
+            self.perimeter = math.pi * self.radius * 2
         elif self.type == 'triangle':
             (ax, ay) = self.points['peak_a']
             (bx, by) = self.points['peak_b']
             (cx, cy) = self.points['peak_c']
             self.area = 1/2 * abs((cx - ax) * (by - ay) - (bx - ax) * (by - ay))
+            self.width = max(ax, bx, cx)
+            self.height = max(ay, by, cy)
+            self.perimeter = math.sqrt((ax - bx) ** 2 + (ay - by) ** 2) + \
+                             math.sqrt((bx - cx) ** 2 + (by - cy) ** 2) + \
+                             math.sqrt((cx - ax) ** 2 + (cy - ay) ** 2)
         else:
             raise ValueError('花ブロックのタイプ「' + self.type + '」は対象外です')
+
+        # ブロック前面の面積を計算
+        self.front_area = self.front_width * self.front_height
+
+        # 花ブロック仕切り面積の比を計算
+        self.partition_area_rate = (self.perimeter * self.depth) / (self.front_area * 2.0)
 
 
 def get_error_value() -> float:

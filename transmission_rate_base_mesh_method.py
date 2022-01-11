@@ -28,7 +28,7 @@ def base_transmission_rate(spec: common.HanaBlockSpec,
         # メッシュの重なり部分を計算
         mesh_3 = np.add(mesh_1, mesh_2)
 
-        # # csvファイルとして保存
+        # # csvファイルとして保存（デバッグ用）
         # np.savetxt('mesh_1.csv', mesh_1, delimiter=',')
         # np.savetxt('mesh_2.csv', mesh_2, delimiter=',')
         # np.savetxt('mesh_3.csv', mesh_3, delimiter=',')
@@ -277,10 +277,3 @@ if __name__ == '__main__':
     resolution = 350
 
     print(base_transmission_rate(spec, 0.0, 10.0))
-
-    # mesh_1 = make_plot_in_mesh(spec, resolution, 0.0, 0.0)
-    # mesh_2 = make_plot_in_mesh(spec, resolution, 50.0, 50.0)
-    #
-    # # csvファイルとして保存
-    # np.savetxt('mesh_1.csv', mesh_1, delimiter=',')
-    # np.savetxt('mesh_2.csv', mesh_2, delimiter=',')

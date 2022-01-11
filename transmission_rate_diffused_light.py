@@ -1,3 +1,4 @@
+import pandas as pd
 import numpy as np
 import math
 import statistics
@@ -19,15 +20,21 @@ def diffused_light_transmission_rate(spec: common.HanaBlockSpec) -> float:
     random_numbers_cases = get_random_number_list()
 
     # 結果格納用の配列を用意
-    rate_s = []
+    rate_s = []         # 透過率
+    sun_altitudes = []   # 太陽高度
+    sun_azimuth_angles = []  # 太陽方位角
 
     for index, case in enumerate(random_numbers_cases):
+
+        # 太陽高度、太陽方位角を計算
+        sun_altitude = get_random_sun_altitude(case[0])
+        sun_azimuth_angle = get_random_sun_azimuth_angle(case[1])
 
         # 点の影の垂直方向、水平方向の移動距離を計算
         distance_vertical, distance_horizontal = distance_point_shadow.distance_of_points_shadow(
             spec=spec,
-            sun_altitude=get_random_sun_altitude(case[0]),
-            sun_azimuth_angle=get_random_sun_azimuth_angle(case[1])
+            sun_altitude=sun_altitude,
+            sun_azimuth_angle=sun_azimuth_angle
         )
 
         # 透過率を計算
@@ -43,8 +50,17 @@ def diffused_light_transmission_rate(spec: common.HanaBlockSpec) -> float:
         else:
             raise ValueError('花ブロックのタイプ「' + spec.type + '」は対象外です')
 
-        # 透過率を配列に追加
+        # 計算結果を配列に追加
         rate_s.append(buf_rate)
+        sun_altitudes.append(sun_altitude)
+        sun_azimuth_angles.append(sun_azimuth_angle)
+
+    # デバッグ用
+    # # 計算結果をDataFrameに追加
+    # df = pd.DataFrame({'sun_altitude':sun_altitudes, 'sun_azimuth_angles': sun_azimuth_angles, 'rate_s': rate_s})
+    #
+    # # CSVファイルに出力
+    # df.to_csv('result/diffused_light_' + spec.type + '.csv')
 
     return statistics.mean(rate_s)
 
