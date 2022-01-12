@@ -31,12 +31,12 @@ def diffused_light_transmission_rate(calc_target: str, spec: common.HanaBlockSpe
         # 太陽高度、太陽方位角を計算
         sun_altitude = case[0]
         sun_azimuth_angle = case[1]
-        # sun_altitude = get_random_sun_altitude(case[0])
-        # sun_azimuth_angle = get_random_sun_azimuth_angle(case[1])
 
         # 点の影の垂直方向、水平方向の移動距離を計算
         distance_vertical, distance_horizontal = distance_point_shadow.distance_of_points_shadow(
-            spec=spec,
+            surface_inclination_angle=spec.inclination_angle,
+            surface_azimuth_angle=spec.azimuth_angle,
+            depth=spec.depth,
             sun_altitude=sun_altitude,
             sun_azimuth_angle=sun_azimuth_angle
         )
