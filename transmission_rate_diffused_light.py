@@ -97,7 +97,7 @@ def get_random_angles_list(calc_target: str) -> list:
     # 太陽方位角を計算
     sun_azimuth_angles_base = np.array([get_random_sun_azimuth_angle(x) for x in r_a])
 
-    # 太陽方位角を-90度～90度の範囲に限定 values[np.where((values>2) & (values<4))]
+    # 太陽方位角を-90度～90度の範囲に限定
     sun_azimuth_angles = sun_azimuth_angles_base[np.where((sun_azimuth_angles_base >= -90.0) &
                                                  (sun_azimuth_angles_base <= 90.0))]
 
