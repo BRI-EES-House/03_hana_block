@@ -143,8 +143,7 @@ def case_study():
 
     # 四角形の場合
     spec = common.HanaBlockSpec(
-        type='square', depth=100, inclination_angle=90, azimuth_angle=0, width=136.0, height=136.0,
-        front_width=190.0, front_height=190.0
+        type='square', depth=100, inclination_angle=90, azimuth_angle=0, width=136.0, height=136.0
     )
     print(spec.type + '　sky:')
     print(diffused_light_transmission_rate('sky', spec))
@@ -153,8 +152,7 @@ def case_study():
 
     # 円形の場合
     spec = common.HanaBlockSpec(
-        type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=136.0 / 2.0,
-        front_width=190.0, front_height=190.0
+        type='circle', depth=100, inclination_angle=90, azimuth_angle=0, radius=136.0 / 2.0
     )
     print(spec.type + '　sky:')
     print(diffused_light_transmission_rate('sky', spec))
@@ -164,8 +162,7 @@ def case_study():
     # 三角形の場合（その1）
     spec = common.HanaBlockSpec(
         type='triangle', depth=100, inclination_angle=90, azimuth_angle=0,
-        points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 130)},
-        front_width=190.0, front_height=190.0
+        points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 130)}
     )
     print(spec.type + '　sky:')
     print(diffused_light_transmission_rate('sky', spec))
@@ -175,8 +172,7 @@ def case_study():
     # 三角形の場合（その2）
     spec = common.HanaBlockSpec(
         type='triangle', depth=150, inclination_angle=90, azimuth_angle=0,
-        points={'peak_a': (0, 0), 'peak_b': (130, 130), 'peak_c': (0, 130)},
-        front_width=190.0, front_height=190.0
+        points={'peak_a': (0, 0), 'peak_b': (130, 130), 'peak_c': (0, 130)}
     )
     print(spec.type + '　sky:')
     print(diffused_light_transmission_rate('sky', spec))
