@@ -114,7 +114,11 @@ def get_random_sun_altitude(random_number: float) -> float:
     :param random_number: 0～1の乱数
     :return:任意の太陽高度[degree]
     """
-    return math.degrees(math.acos(math.sqrt(1-random_number)))
+
+    # 仰角を太陽高度に換算
+    angle = 90.0 - math.degrees(math.acos(math.sqrt(1-random_number)))
+
+    return angle
 
 
 def get_random_sun_azimuth_angle(random_number: float) -> float:
