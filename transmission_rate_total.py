@@ -72,7 +72,14 @@ def total_transmission_rate(case_name: str, calc_mode: str, regions: [int], dire
     """
 
     # 拡散光の透過率を計算
-    tau_s = transmission_rate_diffused_light.diffused_light_transmission_rate(spec=spec)
+    # tau_s = transmission_rate_diffused_light.diffused_light_transmission_rate(spec=spec)
+    # 天空光の透過率を計算
+    tau_s = transmission_rate_diffused_light.diffused_light_transmission_rate(
+        calc_target='sky', spec=spec)
+
+    # 地物反射光の透過率を計算
+    tau_r = transmission_rate_diffused_light.diffused_light_transmission_rate(
+        calc_target='reflected', spec=spec)
 
     # 地域区分ループ
     for region in regions:
@@ -127,7 +134,10 @@ def total_transmission_rate(case_name: str, calc_mode: str, regions: [int], dire
 
                 # 点の影の垂直方向、水平方向の移動距離を計算
                 d_y, d_x = distance_point_shadow.distance_of_points_shadow(
-                    spec=spec,
+                    # spec=spec,
+                    surface_inclination_angle=spec.inclination_angle,
+                    surface_azimuth_angle=spec.azimuth_angle,
+                    depth=spec.depth,
                     sun_altitude=row.太陽高度角_度,
                     sun_azimuth_angle=row.太陽方位角_度
                 )
@@ -234,7 +244,7 @@ def get_climate_data(region: int, calc_mode: str) -> pd.DataFrame:
             'winter': {'月': 12, '日': 22, 'color': 'b'}
         }
 
-        # 散布図の描画設定
+        # 抽出データを用意
         for key, value in target_dates.items():
             df_abstract = df.query('月 == ' + str(value['月']) + ' & 日 == ' + str(value['日']))
             df_target = pd.concat([df_target, df_abstract])
