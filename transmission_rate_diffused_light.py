@@ -59,12 +59,12 @@ def diffused_light_transmission_rate(calc_target: str, spec: common.HanaBlockSpe
         sun_altitudes.append(sun_altitude)
         sun_azimuth_angles.append(sun_azimuth_angle)
 
-    # デバッグ用
-    # 計算結果をDataFrameに追加
-    df = pd.DataFrame({'sun_altitude': sun_altitudes, 'sun_azimuth_angles': sun_azimuth_angles, 'rate_s': rate_s})
-
-    # CSVファイルに出力
-    df.to_csv('result/diffused_light_' + calc_target + '_' + spec.type + '.csv')
+    # # デバッグ用
+    # # 計算結果をDataFrameに追加
+    # df = pd.DataFrame({'sun_altitude': sun_altitudes, 'sun_azimuth_angles': sun_azimuth_angles, 'rate_s': rate_s})
+    #
+    # # CSVファイルに出力
+    # df.to_csv('result/diffused_light_' + calc_target + '_' + spec.type + '.csv')
 
     return statistics.mean(rate_s)
 
@@ -133,7 +133,7 @@ def get_random_sun_azimuth_angle(random_number: float) -> float:
     # 方位角を計算
     angle = math.degrees(2.0 * math.pi * random_number)
 
-    # 南0度、西90度、北180度、東-90度に換算
+    # 0度～180度、-180度-0度に換算
     if angle > 180.0:
         angle = angle - 360.0
 
