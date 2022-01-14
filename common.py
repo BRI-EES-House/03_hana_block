@@ -101,7 +101,8 @@ class HanaBlockSpec:
             (ax, ay) = self.points['peak_a']
             (bx, by) = self.points['peak_b']
             (cx, cy) = self.points['peak_c']
-            self.area = 1/2 * abs((cx - ax) * (by - ay) - (bx - ax) * (by - ay))
+            self.area = abs((ax * by + bx * cy + cx * ay - ay * bx - by * cx - cy * ax) / 2.0)
+            # self.area = 1/2 * abs((cx - ax) * (by - ay) - (bx - ax) * (by - ay))
             self.width = max(ax, bx, cx)
             self.height = max(ay, by, cy)
             self.perimeter = math.sqrt((ax - bx) ** 2 + (ay - by) ** 2) + \
@@ -159,7 +160,7 @@ def test():
     print(spec.area)
 
     # 三角形の場合
-    spec = HanaBlockSpec(type='triangle', points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)})
+    spec = HanaBlockSpec(type='triangle', points={'peak_a': (0, 5), 'peak_b': (10, 5), 'peak_c': (5, 0)})
     print(spec.area)
 
 
