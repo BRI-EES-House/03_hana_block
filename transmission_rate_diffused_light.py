@@ -87,10 +87,11 @@ def get_random_angles_list(calc_target: str) -> list:
     r_a = np.arange(0, 1 + r_step, r_step, dtype=float)
 
     # 太陽高度を計算
+    sun_altitudes_base = np.array([get_random_sun_azimuth_angle(x) for x in r_h])
     if calc_target == 'sky':
-        sun_altitudes = np.array([get_random_sun_altitude(x) for x in r_h])
+        sun_altitudes = sun_altitudes_base[np.where((sun_altitudes_base >= 0.0) & (sun_altitudes_base <= 90.0))]
     elif calc_target == 'reflected':
-        sun_altitudes = np.array([-1.0 * get_random_sun_altitude(x) for x in r_h])
+        sun_altitudes = sun_altitudes_base[np.where((sun_altitudes_base >= -90.0) & (sun_altitudes_base <= 0.0))]
     else:
         raise ValueError('計算対象「' + calc_target + '」は対象外です')
 
