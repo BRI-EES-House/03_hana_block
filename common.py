@@ -3,6 +3,42 @@ import dataclasses
 
 
 @dataclasses.dataclass
+class HanaBlock:
+
+    # 花ブロック開口部の仕様
+    opening_specs: list = dataclasses.field(default_factory=list)
+
+    # 花ブロックの開口部の数
+    number_of_openings: int = 0
+
+    # 花ブロックの奥行, mm
+    depth: float = 0.0
+
+    # 花ブロックの傾斜角, degree
+    inclination_angle: float = 90.0
+
+    # 花ブロックの方位角, degree
+    azimuth_angle: float = 0.0
+
+    # ブロック前面の幅, mm
+    front_width: float = 0.0
+
+    # ブロック前面の高さ, mm
+    front_height: float = 0.0
+
+    # ブロック前面の面積, mm2
+    front_area: float = dataclasses.field(init=False)
+
+    # # 花ブロック仕切り面積の比, -
+    # partition_area_rate: float = dataclasses.field(init=False)
+
+    def __post_init__(self):
+
+        # ブロック前面の面積を計算
+        self.front_area = self.front_width * self.front_height
+
+
+@dataclasses.dataclass
 class HanaBlockSpec:
 
     # 花ブロックの形状（四角形：square、円形：circle、三角形：triangle）
@@ -35,17 +71,17 @@ class HanaBlockSpec:
     # 花ブロック開口部の周長, mm
     perimeter: float = dataclasses.field(init=False)
 
-    # ブロック前面の幅, mm
-    front_width: float = 0.0
-
-    # ブロック前面の高さ, mm
-    front_height: float = 0.0
-
-    # ブロック前面の面積, mm2
-    front_area: float = dataclasses.field(init=False)
-
-    # 花ブロック仕切り面積の比, -
-    partition_area_rate: float = dataclasses.field(init=False)
+    # # ブロック前面の幅, mm
+    # front_width: float = 0.0
+    #
+    # # ブロック前面の高さ, mm
+    # front_height: float = 0.0
+    #
+    # # ブロック前面の面積, mm2
+    # front_area: float = dataclasses.field(init=False)
+    #
+    # # 花ブロック仕切り面積の比, -
+    # partition_area_rate: float = dataclasses.field(init=False)
 
     def __post_init__(self):
 
@@ -65,7 +101,8 @@ class HanaBlockSpec:
             (ax, ay) = self.points['peak_a']
             (bx, by) = self.points['peak_b']
             (cx, cy) = self.points['peak_c']
-            self.area = 1/2 * abs((cx - ax) * (by - ay) - (bx - ax) * (by - ay))
+            self.area = abs((ax * by + bx * cy + cx * ay - ay * bx - by * cx - cy * ax) / 2.0)
+            # self.area = 1/2 * abs((cx - ax) * (by - ay) - (bx - ax) * (by - ay))
             self.width = max(ax, bx, cx)
             self.height = max(ay, by, cy)
             self.perimeter = math.sqrt((ax - bx) ** 2 + (ay - by) ** 2) + \
@@ -74,11 +111,11 @@ class HanaBlockSpec:
         else:
             raise ValueError('花ブロックのタイプ「' + self.type + '」は対象外です')
 
-        # ブロック前面の面積を計算
-        self.front_area = self.front_width * self.front_height
-
-        # 花ブロック仕切り面積の比を計算
-        self.partition_area_rate = (self.perimeter * self.depth) / (self.front_area * 2.0)
+        # # ブロック前面の面積を計算
+        # self.front_area = self.front_width * self.front_height
+        #
+        # # 花ブロック仕切り面積の比を計算
+        # self.partition_area_rate = (self.perimeter * self.depth) / (self.front_area * 2.0)
 
 
 def get_error_value() -> float:
@@ -123,7 +160,7 @@ def test():
     print(spec.area)
 
     # 三角形の場合
-    spec = HanaBlockSpec(type='triangle', points={'peak_a': (0, 0), 'peak_b': (0, 130), 'peak_c': (130, 0)})
+    spec = HanaBlockSpec(type='triangle', points={'peak_a': (0, 5), 'peak_b': (10, 5), 'peak_c': (5, 0)})
     print(spec.area)
 
 
