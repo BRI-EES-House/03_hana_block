@@ -14,7 +14,7 @@ def parametric_studies():
     calc_mode = 'analysis'
 
     # 地域区分のリストを設定
-    regions = [1, 6, 8]
+    regions = [1, 2, 3, 4, 5, 6, 7, 8]
 
     # 方位リストを設定
     if calc_mode == 'analysis':
@@ -31,25 +31,20 @@ def parametric_studies():
         raise ValueError('計算モード「' + calc_mode + '」は対象外です')
 
     # 計算条件のCSVファイルを読み込む
-    df_conditions = pd.read_csv('parametric_studies_triangle.csv', index_col=0, encoding="shift-jis")
+    df_conditions = pd.read_csv('parametric_studies.csv', index_col=0, encoding="shift-jis")
 
     for index, row in df_conditions.iterrows():
 
         # ケース番号を設定
         case_name = str(index + 1)
 
-        # if row['type'] == 'triangle':
-
         opening_specs = []
 
         # 開口部の仕様を設定
-        #TODO: CSVファイルの開口部の数に応じてFor文の繰り返し回数を変更する
+        # TODO: CSVファイルの開口部の数に応じてFor文の繰り返し回数を変更する
         for opening_count in range(4):
 
-            # print(pd.isna(row[str(opening_count + 1) + '_type']))
-
             if not pd.isna(row[str(opening_count + 1) + '_type']):
-            # if row[str(opening_count + 1) + '_type'] != nan:
                 if row[str(opening_count + 1) + '_type'] == 'triangle':
                     opening_specs.append(
                         common.HanaBlockSpec(
@@ -86,16 +81,17 @@ def parametric_studies():
                                       depth=row['depth'], inclination_angle=90, azimuth_angle=0,
                                       front_width=row['front_width'], front_height=row['front_height'])
 
-        # 透過率を計算
+        # 時刻別の透過率を計算
         calc_transmission_rate(
                 case_name=case_name, calc_mode=calc_mode, regions=regions, directions=directions, hana_block=hana_block)
 
+        # 期間平均透過率を計算
         calc_seasonal_transmission_rate(case_name=case_name, calc_mode=calc_mode,
                                         regions=regions, directions=directions, hana_block=hana_block)
 
 
 def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], directions: dict,
-                            hana_block: common.HanaBlock):
+                           hana_block: common.HanaBlock):
     """
     花ブロックの総合透過率を計算し、結果をCSVファイルに出力する
 
@@ -107,24 +103,10 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
     :return: なし
     """
 
-    # 各開口部の天空光の透過率、地物反射光の透過率を計算
-    # tau_s = [""] * 3
-    # tau_r = [""] * 3
-    # TODO: CSVファイルの開口部の数に応じてFor文の繰り返し回数を変更する
-    # for spec_count in range(3):
-    #
-    #     if spec_count < hana_block.number_of_openings - 1:
-    #         # 天空光の透過率を計算
-    #         tau_s[spec_count] = transmission_rate_diffused_light.diffused_light_transmission_rate(
-    #             calc_target='sky', spec=hana_block.opening_specs[spec_count])
-    #         tau_r[spec_count] = transmission_rate_diffused_light.diffused_light_transmission_rate(
-    #         # 地物反射光の透過率を計算
-    #             calc_target='reflected', spec=hana_block.opening_specs[spec_count])
-
     tau_s = []
     tau_r = []
+    # TODO: CSVファイルの開口部の数に応じてFor文の繰り返し回数を変更する
     for spec_count in range(4):
-    # for spec_count in range(hana_block.number_of_openings):
 
         if spec_count < hana_block.number_of_openings:
             # 天空光の透過率を計算
@@ -137,7 +119,6 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
         else:
             tau_s.append(np.nan)
             tau_r.append(np.nan)
-
 
     # 地域区分ループ
     for region in regions:
