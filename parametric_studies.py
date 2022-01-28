@@ -303,48 +303,50 @@ def calc_seasonal_transmission_rate(case_name: str, calc_mode: str, regions: [in
 
     # 結果格納用の辞書型を用意
     dict_results = {'no': [], 'type': [], 'front_width': [], 'front_height': [], 'depth': [],
-                    # '1_width': [], 	'1_height': [], '2_width': [], 	'2_height': [],
-                    # '3_width': [], '3_height': [], '4_width': [], '4_height': [],
                     'partition_area_rate': [], 'opening_area_rate': [],
                     'region': [], 'direction': [], 'tau_total_c': [], 'tau_total_h': []
                     }
-    # dict_results = {'no': [], 'type': [], 'width': [], 'height': [], 'front_width': [],
-    #                 'front_height': [], 'radius': [], 'depth': [], 'perimeter': [],
-    #                 'partition_area_rate': [], 'region': [], 'direction': [], 'tau_total_c': [], 'tau_total_h': []
-    #                 }
 
     # 地域区分ループ
     for region in regions:
 
+        # 暖冷房期間を取得
+        season_dates = common.get_season_dates(region)
+
         # 方位ループ
         for direction, angle in directions.items():
 
+            # ファイル名を設定
             filename = 'parametric_study' + '/' + calc_mode + '_case' + case_name + '_' + 'region' + str(
                     region) + '_' + direction + '.csv'
             df_all = pd.read_csv(filename, index_col=0, encoding="shift-jis")
 
             # 冷房期間の総合透過率を計算
-            tau_total_c = get_seasonal_transmission_rate(df_all.query('月 >= ' + str(6) + ' & 月 <= ' + str(9)))
+            if season_dates['cooling'] == 'nan':
+                tau_total_c = np.nan
+            else:
+                tau_total_c = get_seasonal_transmission_rate(
+                    get_seasonal_climate_data(schedule_dates=season_dates['cooling'], df_all=df_all))
 
             # 暖房期間の総合透過率を計算
-            tau_total_h = get_seasonal_transmission_rate(df_all.query('月 <= ' + str(3) + ' | 月 >= ' + str(11)))
+            if season_dates['heating'] == 'nan':
+                tau_total_h = np.nan
+            else:
+                tau_total_h = get_seasonal_transmission_rate(
+                    get_seasonal_climate_data(schedule_dates=season_dates['heating'], df_all=df_all))
+
+            # # 冷房期間の総合透過率を計算
+            # tau_total_c = get_seasonal_transmission_rate(df_all.query('月 >= ' + str(6) + ' & 月 <= ' + str(9)))
+            #
+            # # 暖房期間の総合透過率を計算
+            # tau_total_h = get_seasonal_transmission_rate(df_all.query('月 <= ' + str(3) + ' | 月 >= ' + str(11)))
 
             # 計算結果を配列に格納
             dict_results['no'].append(case_name)
             dict_results['type'].append(hana_block.opening_specs[0].type)
             dict_results['front_width'].append(hana_block.front_width)
             dict_results['front_height'].append(hana_block.front_height)
-            # dict_results['radius'].append(spec.radius)
             dict_results['depth'].append(hana_block.depth)
-            # dict_results['1_width'].append(hana_block.opening_specs[0].width)
-            # dict_results['1_height'].append(hana_block.opening_specs[0].height)
-            # dict_results['2_width'].append(hana_block.opening_specs[1].width)
-            # dict_results['2_height'].append(hana_block.opening_specs[1].height)
-            # dict_results['3_width'].append(hana_block.opening_specs[2].width)
-            # dict_results['3_height'].append(hana_block.opening_specs[2].height)
-            # dict_results['4_width'].append(hana_block.opening_specs[3].width)
-            # dict_results['4_height'].append(hana_block.opening_specs[3].height)
-            # dict_results['perimeter_total'].append(get_perimeter_total(hana_block))
             dict_results['partition_area_rate'].append(get_partition_area_rate(hana_block))
             dict_results['opening_area_rate'].append(get_opening_area_rate(hana_block))
             dict_results['region'].append(region)
