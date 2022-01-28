@@ -149,19 +149,68 @@ def get_direction_list() -> dict:
     return directions
 
 
+def get_season_dates(region: int) -> dict:
+    """
+    地域区分別の暖冷房期間を辞書型で返す
+
+    :param region:  地域区分番号
+    :return: 方位名称と方位角のリスト
+    """
+
+    seasons_by_region = {
+        '1': {
+            'heating': {'start': {'month': 9, 'day': 24}, 'end': {'month': 6, 'day': 7}},
+            'cooling': {'start': {'month': 7, 'day': 10}, 'end': {'month': 8, 'day': 31}}
+        },
+        '2': {
+            'heating': {'start': {'month': 9, 'day': 26}, 'end': {'month': 6, 'day': 4}},
+            'cooling': {'start': {'month': 7, 'day': 15}, 'end': {'month': 8, 'day': 31}}
+        },
+        '3': {
+            'heating': {'start': {'month': 9, 'day': 30}, 'end': {'month': 5, 'day': 31}},
+            'cooling': {'start': {'month': 7, 'day': 10}, 'end': {'month': 8, 'day': 31}}
+        },
+        '4': {
+            'heating': {'start': {'month': 10, 'day': 1}, 'end': {'month': 5, 'day': 30}},
+            'cooling': {'start': {'month': 7, 'day': 10}, 'end': {'month': 8, 'day': 31}}
+        },
+        '5': {
+            'heating': {'start': {'month': 10, 'day': 10}, 'end': {'month': 5, 'day': 15}},
+            'cooling': {'start': {'month': 7, 'day': 6}, 'end': {'month': 8, 'day': 31}}
+        },
+        '6': {
+            'heating': {'start': {'month': 11, 'day': 4}, 'end': {'month': 4, 'day': 21}},
+            'cooling': {'start': {'month': 5, 'day': 30}, 'end': {'month': 9, 'day': 23}}
+        },
+        '7': {
+            'heating': {'start': {'month': 11, 'day': 26}, 'end': {'month': 3, 'day': 27}},
+            'cooling': {'start': {'month': 5, 'day': 15}, 'end': {'month': 10, 'day': 13}}
+        },
+        '8': {
+            'heating': 'nan',
+            'cooling': {'start': {'month': 3, 'day': 25}, 'end': {'month': 12, 'day': 14}}
+        },
+    }
+
+    return seasons_by_region[str(region)]
+
+
 def test():
 
-    # 四角形の場合
-    spec = HanaBlockSpec(type='square', width=130.0, height=130.0)
-    print(spec.area)
+    # # 四角形の場合
+    # spec = HanaBlockSpec(type='square', width=130.0, height=130.0)
+    # print(spec.area)
+    #
+    # # 円形の場合
+    # spec = HanaBlockSpec(type='circle', radius=50.0)
+    # print(spec.area)
+    #
+    # # 三角形の場合
+    # spec = HanaBlockSpec(type='triangle', points={'peak_a': (0, 5), 'peak_b': (10, 5), 'peak_c': (5, 0)})
+    # print(spec.area)
 
-    # 円形の場合
-    spec = HanaBlockSpec(type='circle', radius=50.0)
-    print(spec.area)
-
-    # 三角形の場合
-    spec = HanaBlockSpec(type='triangle', points={'peak_a': (0, 5), 'peak_b': (10, 5), 'peak_c': (5, 0)})
-    print(spec.area)
+    season = get_season_dates(1)
+    print(season['heating']['start'])
 
 
 if __name__ == '__main__':
