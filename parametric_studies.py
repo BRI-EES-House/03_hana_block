@@ -363,6 +363,38 @@ def calc_seasonal_transmission_rate(case_name: str, calc_mode: str, regions: [in
     )
 
 
+def get_seasonal_climate_data(schedule_dates: dict, df_all: pd.DataFrame) -> pd.DataFrame:
+    """
+    暖冷房期間の気象データを読み込む関数
+
+    :param schedule_dates:  冷暖房期間の開始日・終了日の情報
+    :param df_all:  年間の計算結果データ
+    :return: 暖房期間または冷房期間の気象データ（DataFrame）
+    """
+
+    # 開始日、終了日の日付を設定
+    start_month = schedule_dates['start']['month']
+    start_day = schedule_dates['start']['day']
+    end_month = schedule_dates['end']['month']
+    end_day = schedule_dates['end']['day']
+
+    # 開始月の気象データを設定
+    df_1 = df_all.query('月 == ' + str(start_month) + ' & 日 >= ' + str(start_day))
+
+    # 開始月と終了月の間のデータを設定（開始月が終了月より大きい＝年をまたいでいる場合は12月でいったん区切る）
+    if start_month > end_month:
+        df_2_1 = df_all.query('月 > ' + str(start_month) + ' & 月 <= ' + str(12))
+        df_2_2 = df_all.query('月 >= ' + str(1) + ' & 月 < ' + str(end_month))
+        df_2 = pd.concat([df_2_1, df_2_2])
+    else:
+        df_2 = df_all.query('月 > ' + str(start_month) + ' & 月 < ' + str(end_month))
+
+    # 終了月の気象データを設定
+    df_3 = df_all.query('月 == ' + str(end_month) + ' & 日 <= ' + str(end_day))
+
+    return pd.concat([df_1, df_2, df_3])
+
+
 def get_seasonal_transmission_rate(df):
     """
         花ブロックの期間平均透過率を計算
