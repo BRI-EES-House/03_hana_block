@@ -142,15 +142,16 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
             sky_solar_radiation_transed = []        # 傾斜面透過天空日射量, W
             reflected_solar_radiation_transed = []  # 傾斜面透過反射日射量, W
             front_total_solar_radiation = []        # 花ブロック前面の傾斜面日射量, W
-            # direct_transmission_rate_1 = []     # 直達光の透過率, -
-            # sky_light_transmission_rate_1 = []  # 拡散光の透過率, -
-            # total_transmission_rate = []            # 総合透過率, -
 
             # 結果格納用の辞書型を用意
-            dict_results = {'direct_transmission_rate_1': [], 'sky_light_transmission_rate_1': [], 'reflected_light_transmission_rate_1': [],
-                            'direct_transmission_rate_2': [], 'sky_light_transmission_rate_2': [], 'reflected_light_transmission_rate_2': [],
-                            'direct_transmission_rate_3': [], 'sky_light_transmission_rate_3': [], 'reflected_light_transmission_rate_3': [],
-                            'direct_transmission_rate_4': [], 'sky_light_transmission_rate_4': [], 'reflected_light_transmission_rate_4': []
+            dict_results = {'direct_transmission_rate_1': [], 'sky_light_transmission_rate_1': [],
+                            'reflected_light_transmission_rate_1': [],
+                            'direct_transmission_rate_2': [], 'sky_light_transmission_rate_2': [],
+                            'reflected_light_transmission_rate_2': [],
+                            'direct_transmission_rate_3': [], 'sky_light_transmission_rate_3': [],
+                            'reflected_light_transmission_rate_3': [],
+                            'direct_transmission_rate_4': [], 'sky_light_transmission_rate_4': [],
+                            'reflected_light_transmission_rate_4': []
                             }
 
             # 気象データの行ループ
@@ -182,12 +183,6 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
                 # 傾斜面日射量を計算
                 i_total = i_d_t + i_s_t + i_r_t
 
-                # # 計算結果を配列に格納
-                # total_solar_radiation.append(i_total)
-                # direct_solar_radiation.append(i_d_t)
-                # sky_solar_radiation.append(i_s_t)
-                # reflected_solar_radiation.append(i_r_t)
-
                 # 点の影の垂直方向、水平方向の移動距離を計算
                 d_y, d_x = distance_point_shadow.distance_of_points_shadow(
                     surface_inclination_angle=hana_block.inclination_angle,
@@ -203,22 +198,24 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
 
                 # 開口部別のループ
                 for spec_count in range(4):
-                # for spec_count in range(hana_block.number_of_openings):
 
                     if spec_count < hana_block.number_of_openings:
 
                         # 花ブロックの直達光の透過率を計算
                         if hana_block.opening_specs[spec_count].type == 'square':
                             tau_d_t = transmission_rate_base.base_transmission_rate_square(
-                                spec=hana_block.opening_specs[spec_count], distance_vertical=d_y, distance_horizontal=d_x
+                                spec=hana_block.opening_specs[spec_count],
+                                distance_vertical=d_y, distance_horizontal=d_x
                             )
                         elif hana_block.opening_specs[spec_count].type == 'circle':
                             tau_d_t = transmission_rate_base.base_transmission_rate_circle(
-                                spec=hana_block.opening_specs[spec_count], distance_vertical=d_y, distance_horizontal=d_x
+                                spec=hana_block.opening_specs[spec_count],
+                                distance_vertical=d_y, distance_horizontal=d_x
                             )
                         elif hana_block.opening_specs[spec_count].type == 'triangle':
                             tau_d_t = transmission_rate_base.base_transmission_rate_triangle(
-                                spec=hana_block.opening_specs[spec_count], distance_vertical=d_y, distance_horizontal=d_x
+                                spec=hana_block.opening_specs[spec_count],
+                                distance_vertical=d_y, distance_horizontal=d_x
                             )
                         else:
                             raise ValueError('花ブロックのタイプ「' + hana_block.opening_specs[spec_count].type + '」は対象外です')
@@ -252,11 +249,6 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
                         dict_results['sky_light_transmission_rate_' + str(spec_count + 1)].append(np.nan)
                         dict_results['reflected_light_transmission_rate_' + str(spec_count + 1)].append(np.nan)
 
-                    # # 傾斜面透過直達日射量、傾斜面透過天空日射量、傾斜面透過反射日射量を計算
-                    # i_d_transed = i_d_transed + (i_d_t * tau_d_t * hana_block.opening_specs[spec_count].area)
-                    # i_s_transed = i_s_transed + (i_s_t * tau_s[spec_count] * hana_block.opening_specs[spec_count].area)
-                    # i_r_transed = i_r_transed + (i_r_t * tau_r[spec_count] * hana_block.opening_specs[spec_count].area)
-
                 # 花ブロック前面の傾斜面日射量を計算
                 i_front_total = (i_d_t + i_s_t + i_r_t) * hana_block.front_area * (10 ** -6)
 
@@ -269,21 +261,6 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
                 sky_solar_radiation_transed.append(i_s_transed)
                 reflected_solar_radiation_transed.append(i_r_transed)
                 front_total_solar_radiation.append(i_front_total)
-
-                # direct_solar_radiation_transed = []
-                # sky_solar_radiation_transed = []  # 傾斜面透過天空日射量, W
-                # reflected_solar_radiation_transed = []  # 傾斜面透過反射日射量, W
-                # front_total_solar_radiation = []  # 花ブロック前面の傾斜面日射量, W
-
-                # # 花ブロックの総合透過率を計算（傾斜面日射量が誤差値未満の場合は計算しない）
-                # if i_total < common.get_error_value():
-                #     tau_total = 0.0
-                # else:
-                #     tau_total = (i_d_t * tau_d_t + i_s_t * tau_s + i_r_t * tau_s) / i_total
-
-                # direct_transmission_rate.append(tau_d_t)
-                # diffused_light_transmission_rate.append(tau_s)
-                # total_transmission_rate.append(tau_total)
 
             # 計算結果をDataFrameに追加
             df['total_solar_radiation'] = total_solar_radiation
@@ -298,16 +275,11 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
             for column_name, item in df_result.iteritems():
                 df[column_name] = item
 
-            # df.merge(df_result)
-
+            # 透過日射等の計算結果をDataFrameに追加
             df['direct_solar_radiation_transed'] = direct_solar_radiation_transed
             df['sky_solar_radiation_transed'] = sky_solar_radiation_transed
             df['reflected_solar_radiation_transed'] = reflected_solar_radiation_transed
             df['front_total_solar_radiation'] = front_total_solar_radiation
-
-            # df['direct_transmission_rate'] = direct_transmission_rate
-            # df['diffused_light_transmission_rate'] = diffused_light_transmission_rate
-            # df['total_transmission_rate'] = total_transmission_rate
 
             # CSVファイル出力
             df.to_csv(
@@ -397,35 +369,12 @@ def get_seasonal_transmission_rate(df):
         :return: 花ブロックの期間平均透過率, -
     """
 
-    # df['solar_transmitted'] = df.loc[:, 'direct_solar_radiation'] * df.loc[:, 'direct_transmission_rate'] + \
-    #                           df.loc[:, 'diffuse_solar_radiation'] * df.loc[:, 'diffused_light_transmission_rate'] + \
-    #                           df.loc[:, 'reflected_solar_radiation'] * df.loc[:, 'diffused_light_transmission_rate']
-    # df['solar_total'] = df.loc[:, 'direct_solar_radiation'] + df.loc[:, 'diffuse_solar_radiation'] + \
-    #                     df.loc[:, 'reflected_solar_radiation']
-
-    sum_solar_transmitted = df['direct_solar_radiation_transed'].sum() + \
+    sum_solar_transmitted = df['direct_solar_radiation_transed'].sum() +\
                             df['sky_solar_radiation_transed'].sum() + df['reflected_solar_radiation_transed'].sum()
     sum_solar_total = df['front_total_solar_radiation'].sum()
     transmission_rate = sum_solar_transmitted / sum_solar_total
 
     return transmission_rate
-
-
-# def get_perimeter_total(hana_block: common.HanaBlock):
-#     """
-#         花ブロックの周長を計算
-#
-#         :param hana_block:  花ブロック仕様
-#         :return: 花ブロックの周長, mm
-#     """
-#
-#     # 花ブロックの周長の合計を計算
-#     perimeter_total = 0.0
-#     for spec_count in range(4):
-#         if spec_count < hana_block.number_of_openings:
-#             perimeter_total = perimeter_total + hana_block.opening_specs[0].perimeter
-#
-#     return perimeter_total
 
 
 def get_partition_area_rate(hana_block: common.HanaBlock):
@@ -481,7 +430,23 @@ if __name__ == '__main__':
     #
     # print(hana_block.opening_specs[0].type)
 
-    x = np.arange(start=0.0, stop=3.1, step=0.1, dtype=float)
-    print(x)
+    # # 暖冷房期間を取得
+    # region = 1
+    # season_dates = common.get_season_dates(region)
+    #
+    # # 1年間の気象データを取得
+    # df_all = transmission_rate_total.get_climate_data(region=region, calc_mode='analysis')
+    #
+    # # 冷房期間の総合透過率を計算
+    # if season_dates['cooling'] == 'nan':
+    #     tau_total_c = np.nan
+    # else:
+    #     df_cooling = get_seasonal_climate_data(schedule_dates=season_dates['cooling'], df_all=df_all)
+    #
+    # # 暖房期間の総合透過率を計算
+    # if season_dates['heating'] == 'nan':
+    #     tau_total_h = np.nan
+    # else:
+    #     df_heating = get_seasonal_climate_data(schedule_dates=season_dates['heating'], df_all=df_all)
 
     parametric_studies()
