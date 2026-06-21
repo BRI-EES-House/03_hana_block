@@ -272,7 +272,7 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
             df_result = pd.DataFrame.from_dict(dict_results, orient="columns")
 
             # 透過率の計算結果を統合
-            for column_name, item in df_result.iteritems():
+            for column_name, item in df_result.items():
                 df[column_name] = item
 
             # 透過日射等の計算結果をDataFrameに追加
