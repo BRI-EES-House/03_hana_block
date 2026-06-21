@@ -1,3 +1,4 @@
 parametric_study/*.csv
+parametric_study/calculated/*.csv
 *.pyc
 *.DS_Store

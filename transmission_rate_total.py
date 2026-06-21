@@ -1,10 +1,13 @@
 import pandas as pd
+
 import common
 import solar_radiation
 import distance_point_shadow
 import transmission_rate_base
 import transmission_rate_diffused_light
 import transmission_rate_base_mesh_method
+from region import Region
+import climate_data
 
 
 def case_study_single():
@@ -82,10 +85,11 @@ def total_transmission_rate(case_name: str, calc_mode: str, regions: [int], dire
         calc_target='reflected', spec=spec)
 
     # 地域区分ループ
-    for region in regions:
+    for region in Region:
 
         # 1年間の気象データを取得
-        df_climate = get_climate_data(region=region, calc_mode=calc_mode)
+        cd = climate_data.ClimateData.load(calc_mode=calc_mode, region=region)
+        df_climate = cd.df
 
         # 方位ループ
         for direction, angle in directions.items():
@@ -96,38 +100,33 @@ def total_transmission_rate(case_name: str, calc_mode: str, regions: [int], dire
             # 計算結果格納用配列を用意
             df = df_climate.loc[:, ['月', '日', '時', '太陽高度角_度', '太陽方位角_度']]
             total_solar_radiation = []          # 傾斜面日射量, W/m2
-            direct_solar_radiation = []         # 傾斜面直達日射量, W/m2
-            diffuse_solar_radiation = []        # 傾斜面天空日射量, W/m2
-            reflected_solar_radiation = []      # 傾斜面の反射日射量, W/m2
             direct_transmission_rate = []           # 直達光の透過率, -
             diffused_light_transmission_rate = []   # 拡散光の透過率, -
             total_transmission_rate = []            # 総合透過率, -
 
+            # 傾斜面直達日射量, W/m2
+            i_d_ts = cd.get_i_d_ts(p_beta=spec.inclination_angle, p_alpha=spec.azimuth_angle)
+
+            # 傾斜面天空日射量, W/m2
+            i_s_ts = cd.get_i_s_ts(p_beta=spec.inclination_angle)
+
+            # 傾斜面反射日射量, W/m2
+            i_r_ts = cd.get_i_r_ts(p_beta=spec.inclination_angle)
+
+            # 傾斜面日射量, W/m2
+            i_total_ts = i_d_ts + i_s_ts + i_r_ts
+
             # 気象データの行ループ
-            for row in df_climate.itertuples():
+            for t, row in enumerate(df_climate.itertuples()):
 
-                # 傾斜面直達日射量を計算
-                i_d_t = solar_radiation.get_direct_radiation(
-                    normal_surface_direct_radiation=row.法線面直達日射量_W_m2,
-                    solar_altitude=row.太陽高度角_度,
-                    solar_azimuth=row.太陽方位角_度,
-                    surface_inclination_angle=spec.inclination_angle,
-                    surface_azimuth_angle=spec.azimuth_angle
-                )
+                # 傾斜面直達日射量, W/m2
+                i_d_t = i_d_ts[t]
 
-                # 傾斜面天空日射量を計算
-                i_s_t = solar_radiation.get_diffuse_radiation(
-                    horizontal_surface_sky_radiation=row.水平面天空日射量_W_m2,
-                    surface_inclination_angle=spec.inclination_angle
-                )
+                # 傾斜面天空日射量, W/m2
+                i_s_t = i_s_ts[t]
 
-                # 傾斜面反射日射量を計算
-                i_r_t = solar_radiation.get_reflected_radiation(
-                    normal_surface_direct_radiation=row.法線面直達日射量_W_m2,
-                    horizontal_surface_sky_radiation=row.水平面天空日射量_W_m2,
-                    solar_altitude=row.太陽高度角_度,
-                    surface_inclination_angle=spec.inclination_angle
-                )
+                # 傾斜面反射日射量, W/m2
+                i_r_t = i_r_ts[t]
 
                 # 傾斜面日射量を計算
                 i_total = i_d_t + i_s_t + i_r_t
@@ -180,76 +179,24 @@ def total_transmission_rate(case_name: str, calc_mode: str, regions: [int], dire
                     tau_total = (i_d_t * tau_d_t + i_s_t * tau_s + i_r_t * tau_s) / i_total
 
                 # 計算結果を配列に格納
-                total_solar_radiation.append(i_total)
-                direct_solar_radiation.append(i_d_t)
-                diffuse_solar_radiation.append(i_s_t)
-                reflected_solar_radiation.append(i_r_t)
                 direct_transmission_rate.append(tau_d_t)
                 diffused_light_transmission_rate.append(tau_s)
                 total_transmission_rate.append(tau_total)
 
             # 計算結果をDataFrameに追加
-            df['total_solar_radiation'] = total_solar_radiation
-            df['direct_solar_radiation'] = direct_solar_radiation
-            df['diffuse_solar_radiation'] = diffuse_solar_radiation
-            df['reflected_solar_radiation'] = reflected_solar_radiation
+            df['total_solar_radiation'] = i_total_ts
+            df['direct_solar_radiation'] = i_d_ts
+            df['diffuse_solar_radiation'] = i_s_ts
+            df['reflected_solar_radiation'] = i_r_ts
             df['direct_transmission_rate'] = direct_transmission_rate
             df['diffused_light_transmission_rate'] = diffused_light_transmission_rate
             df['total_transmission_rate'] = total_transmission_rate
 
             # CSVファイル出力
             df.to_csv(
-                'result' + '/' + calc_mode + '_case' + case_name + '_' + 'region' + str(region) + '_' + direction + '.csv',
+                'result' + '/' + calc_mode + '_case' + case_name + '_' + 'region' + region.value + '_' + direction + '.csv',
                 encoding="shift-jis"
             )
-
-
-def get_climate_data(region: int, calc_mode: str) -> pd.DataFrame:
-    """
-    地域区分別の気象データを読み込む関数
-
-    :param region:  地域区分の番号
-    :param calc_mode:   計算モード
-    :return: 指定した地域の気象データ（DataFrame）
-    """
-
-    # 地域区分別の気象データファイル名のリストを作成
-    directory_name = 'climateData'
-    csv_file_name = 'climateData_'
-
-    # CSVファイルを読み込む
-    df = pd.read_csv(directory_name + '/' + csv_file_name + str(region) + '.csv', encoding="shift-jis")
-
-    # 不要な列を削除
-    #df = df.drop("Unnamed: 10", axis=1)
-
-    # 列名を変更（"["や"/"があるとうまくデータを扱えないため）
-    df = df.rename(
-        columns={'外気温[℃]': '外気温_degree', '外気絶対湿度 [kg/kgDA]': '外気絶対湿度_kg_kgDA',
-                 '法線面直達日射量 [W/m2]': '法線面直達日射量_W_m2', '水平面天空日射量 [W/m2]': '水平面天空日射量_W_m2',
-                 '水平面夜間放射量 [W/m2]': '水平面夜間放射量_W_m2', '太陽高度角[度]': '太陽高度角_度',
-                 '太陽方位角[度]': '太陽方位角_度'})
-
-    df_target = pd.DataFrame()
-    if calc_mode == 'analysis':
-        df_target = df
-    elif calc_mode == 'mesh':
-        # メッシュ法の場合、計算時間が長いため、ここでは春分、夏至、秋分、冬至のみに絞る
-
-        # データ抽出日の設定
-        target_dates = {
-            'spring': {'月': 3, '日': 23, 'color': 'g'},
-            'summer': {'月': 6, '日': 22, 'color': 'r'},
-            'autumn': {'月': 9, '日': 21, 'color': 'y'},
-            'winter': {'月': 12, '日': 22, 'color': 'b'}
-        }
-
-        # 抽出データを用意
-        for key, value in target_dates.items():
-            df_abstract = df.query('月 == ' + str(value['月']) + ' & 日 == ' + str(value['日']))
-            df_target = pd.concat([df_target, df_abstract])
-
-    return df_target
 
 
 if __name__ == '__main__':

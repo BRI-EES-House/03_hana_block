@@ -6,6 +6,8 @@ import distance_point_shadow
 import transmission_rate_base
 import transmission_rate_diffused_light
 import transmission_rate_total
+from region import Region
+import climate_data
 
 
 def parametric_studies():
@@ -121,10 +123,11 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
             tau_r.append(np.nan)
 
     # 地域区分ループ
-    for region in regions:
+    for region in Region:
 
         # 1年間の気象データを取得
-        df_climate = transmission_rate_total.get_climate_data(region=region, calc_mode=calc_mode)
+        cd = climate_data.ClimateData.load(calc_mode=calc_mode, region=region)
+        df_climate = cd.df
 
         # 方位ループ
         for direction, angle in directions.items():
@@ -134,10 +137,6 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
 
             # 計算結果格納用配列を用意
             df = df_climate.loc[:, ['月', '日', '時', '太陽高度角_度', '太陽方位角_度']]
-            total_solar_radiation = []          # 傾斜面日射量, W/m2
-            direct_solar_radiation = []         # 傾斜面直達日射量, W/m2
-            sky_solar_radiation = []            # 傾斜面天空日射量, W/m2
-            reflected_solar_radiation = []      # 傾斜面反射日射量, W/m2
             direct_solar_radiation_transed = []     # 傾斜面透過直達日射量, W
             sky_solar_radiation_transed = []        # 傾斜面透過天空日射量, W
             reflected_solar_radiation_transed = []  # 傾斜面透過反射日射量, W
@@ -153,35 +152,30 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
                             'direct_transmission_rate_4': [], 'sky_light_transmission_rate_4': [],
                             'reflected_light_transmission_rate_4': []
                             }
+            
+            # 傾斜面直達日射量, W/m2
+            i_d_ts = cd.get_i_d_ts(p_beta=hana_block.inclination_angle, p_alpha=hana_block.azimuth_angle)
+
+            # 傾斜面天空日射量, W/m2
+            i_s_ts = cd.get_i_s_ts(p_beta=hana_block.inclination_angle)
+
+            # 傾斜面反射日射量, W/m2
+            i_r_ts = cd.get_i_r_ts(p_beta=hana_block.inclination_angle)
+
+            # 傾斜面日射量, W/m2
+            i_total_ts = i_d_ts + i_s_ts + i_r_ts
 
             # 気象データの行ループ
-            for row in df_climate.itertuples():
+            for t, row in enumerate(df_climate.itertuples()):
 
-                # 傾斜面直達日射量_W/m2を計算
-                i_d_t = solar_radiation.get_direct_radiation(
-                    normal_surface_direct_radiation=row.法線面直達日射量_W_m2,
-                    solar_altitude=row.太陽高度角_度,
-                    solar_azimuth=row.太陽方位角_度,
-                    surface_inclination_angle=hana_block.inclination_angle,
-                    surface_azimuth_angle=hana_block.azimuth_angle
-                )
+                # 傾斜面直達日射量, W/m2
+                i_d_t = i_d_ts[t]
 
-                # 傾斜面天空日射量_W/m2を計算
-                i_s_t = solar_radiation.get_diffuse_radiation(
-                    horizontal_surface_sky_radiation=row.水平面天空日射量_W_m2,
-                    surface_inclination_angle=hana_block.inclination_angle
-                )
+                # 傾斜面天空日射量, W/m2
+                i_s_t = i_s_ts[t]
 
-                # 傾斜面反射日射量_W/m2を計算
-                i_r_t = solar_radiation.get_reflected_radiation(
-                    normal_surface_direct_radiation=row.法線面直達日射量_W_m2,
-                    horizontal_surface_sky_radiation=row.水平面天空日射量_W_m2,
-                    solar_altitude=row.太陽高度角_度,
-                    surface_inclination_angle=hana_block.inclination_angle
-                )
-
-                # 傾斜面日射量を計算
-                i_total = i_d_t + i_s_t + i_r_t
+                # 傾斜面反射日射量, W/m2
+                i_r_t = i_r_ts[t]
 
                 # 点の影の垂直方向、水平方向の移動距離を計算
                 d_y, d_x = distance_point_shadow.distance_of_points_shadow(
@@ -253,20 +247,16 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
                 i_front_total = (i_d_t + i_s_t + i_r_t) * hana_block.front_area * (10 ** -6)
 
                 # 計算結果を配列に格納
-                total_solar_radiation.append(i_total)
-                direct_solar_radiation.append(i_d_t)
-                sky_solar_radiation.append(i_s_t)
-                reflected_solar_radiation.append(i_r_t)
                 direct_solar_radiation_transed.append(i_d_transed)
                 sky_solar_radiation_transed.append(i_s_transed)
                 reflected_solar_radiation_transed.append(i_r_transed)
                 front_total_solar_radiation.append(i_front_total)
 
             # 計算結果をDataFrameに追加
-            df['total_solar_radiation'] = total_solar_radiation
-            df['direct_solar_radiation'] = direct_solar_radiation
-            df['sky_solar_radiation'] = sky_solar_radiation
-            df['reflected_solar_radiation'] = reflected_solar_radiation
+            df['total_solar_radiation'] = i_total_ts
+            df['direct_solar_radiation'] = i_d_ts
+            df['sky_solar_radiation'] = i_s_ts
+            df['reflected_solar_radiation'] = i_r_ts
 
             # 辞書型をDataFrameに変換
             df_result = pd.DataFrame.from_dict(dict_results, orient="columns")
@@ -283,7 +273,7 @@ def calc_transmission_rate(case_name: str, calc_mode: str, regions: [int], direc
 
             # CSVファイル出力
             df.to_csv(
-                'parametric_study' + '/' + calc_mode + '_case' + case_name + '_' + 'region' + str(region)
+                'parametric_study' + '/' + calc_mode + '_case' + case_name + '_' + 'region' + region.value
                 + '_' + direction + '.csv', encoding="shift-jis"
             )
 
