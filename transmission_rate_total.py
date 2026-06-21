@@ -221,7 +221,7 @@ def get_climate_data(region: int, calc_mode: str) -> pd.DataFrame:
     df = pd.read_csv(directory_name + '/' + csv_file_name + str(region) + '.csv', encoding="shift-jis")
 
     # 不要な列を削除
-    df = df.drop("Unnamed: 10", axis=1)
+    #df = df.drop("Unnamed: 10", axis=1)
 
     # 列名を変更（"["や"/"があるとうまくデータを扱えないため）
     df = df.rename(
